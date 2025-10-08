@@ -67,7 +67,8 @@ def StrapJoint(overlap, cohesive_penalties, L=150.0, B=25.0, th=2.0, pl=8, orien
     mymodel.materials['SIGAPREG C U230-0/NF-E320/39%'].Density(
         table=((1.55e-09, ), ))
     mymodel.materials['SIGAPREG C U230-0/NF-E320/39%'].HashinDamageInitiation(
-        table=((1800.0, 1200.0, 36.0, 149.0, 64.0, 42.0), ))
+        table=((1800.0, 1200.0, 36.0, 149.0, 64.0, 42.0), ),
+        alpha=1.0)
     mymodel.materials['SIGAPREG C U230-0/NF-E320/39%'].hashinDamageInitiation.DamageEvolution(
         type=ENERGY, table=((92.0, 80.0, 0.21, 0.8), ))
 
@@ -342,20 +343,20 @@ def StrapJoint(overlap, cohesive_penalties, L=150.0, B=25.0, th=2.0, pl=8, orien
         mixedModeType=BK, exponent=1.0, evolTable=((0.9055, 2.3213, 2.3213), ))
     
     #create interactions
-    mymodel.ContactExp(name='Int-1', createStepName='Step-1')
+    mymodel.ContactExp(name='Int-1', createStepName='Initial')
     mymodel.interactions['Int-1'].includedPairs.setValuesInStep(
-        stepName='Step-1', useAllstar=ON)
+        stepName='Initial', useAllstar=ON)
     
     r21=mymodel.rootAssembly.surfaces['KlebeflaecheFuegepartner']
     r22=mymodel.rootAssembly.surfaces['KlebeflaecheStrap']
     
 
     mymodel.interactions['Int-1'].contactPropertyAssignments.appendInStep(
-        stepName='Step-1', assignments=((GLOBAL, SELF, 'General'), (r21, r22, 
+        stepName='Initial', assignments=((GLOBAL, SELF, 'General'), (r21, r22,
         'Cohesive')))
     
     mymodel.interactions['Int-1'].wearSurfacePropertyAssignments.appendInStep(
-        stepName='Step-1', assignments=((GLOBAL, ''), ))
+        stepName='Initial', assignments=((GLOBAL, ''), ))
     
     #create smooth step amplitude
     mymodel.SmoothStepAmplitude(name='SmoothStep', timeSpan=STEP, data=((
@@ -402,25 +403,20 @@ def StrapJoint(overlap, cohesive_penalties, L=150.0, B=25.0, th=2.0, pl=8, orien
         limit=-0.1, halt=ON)
     
     mymodel.fieldOutputRequests['F-Output-1'].setValues(variables=(
-        'CFAILURE', 'DAMAGEC', 'DAMAGEFC', 'DAMAGEFT', 'DAMAGEMC', 'DAMAGEMT', 
-        'DAMAGESHR', 'DAMAGET', 'DMICRT', 'E', 'MISES', 'S', 'SDEG', 'STATUS'), 
-        numIntervals=50, layupNames=('Fuegepartner-1.CompositeLayup-1', ), 
+        'DAMAGEC', 'DAMAGEFC', 'DAMAGEFT', 'DAMAGEMC', 'DAMAGEMT', 'DAMAGESHR', 'DAMAGET', 'DMICRT', 'LE', 'S', 'SDEG', 'STATUS'),
+        numIntervals=50, layupNames=('Fuegepartner-1.CompositeLayup-Fuegepartner', ),
         layupLocationMethod=SPECIFIED, outputAtPlyTop=False, 
         outputAtPlyMid=True, outputAtPlyBottom=False, rebar=EXCLUDE)
     
     mymodel.FieldOutputRequest(name='F-Output-2', 
-        createStepName='Step-1', variables=('DAMAGEC', 'DAMAGEFC', 
-        'DAMAGEFT', 'DAMAGEMC', 'DAMAGEMT', 'DAMAGESHR', 'DAMAGET', 'DMICRT', 
-        'LE', 'S', 'SDEG', 'STATUS'), numIntervals=50, layupNames=(
-        'Fuegepartner-2.CompositeLayup-1', ), layupLocationMethod=SPECIFIED, 
+        createStepName='Step-1', variables=('DAMAGEC', 'DAMAGEFC', 'DAMAGEFT', 'DAMAGEMC', 'DAMAGEMT', 'DAMAGESHR', 'DAMAGET', 'DMICRT', 'LE', 'S', 'SDEG', 'STATUS'),
+        numIntervals=50, layupNames=('Fuegepartner-2.CompositeLayup-Fuegepartner', ), layupLocationMethod=SPECIFIED,
         outputAtPlyTop=False, outputAtPlyMid=True, outputAtPlyBottom=False, 
         rebar=EXCLUDE)
 
     mymodel.FieldOutputRequest(name='F-Output-3', 
-        createStepName='Step-1', variables=('DAMAGEC', 'DAMAGEFC', 
-        'DAMAGEFT', 'DAMAGEMC', 'DAMAGEMT', 'DAMAGESHR', 'DAMAGET', 'DMICRT', 
-        'LE', 'S', 'SDEG', 'STATUS'), numIntervals=50, layupNames=(
-        'Strap-1.CompositeLayup-Strap', ), layupLocationMethod=SPECIFIED, 
+        createStepName='Step-1', variables=('DAMAGEC', 'DAMAGEFC', 'DAMAGEFT', 'DAMAGEMC', 'DAMAGEMT', 'DAMAGESHR', 'DAMAGET', 'DMICRT', 'LE', 'S', 'SDEG', 'STATUS'),
+        numIntervals=50, layupNames=('Strap-1.CompositeLayup-Strap', ), layupLocationMethod=SPECIFIED, 
         outputAtPlyTop=False, outputAtPlyMid=True, outputAtPlyBottom=False, 
         rebar=EXCLUDE)
     

@@ -5,10 +5,10 @@ import __main__
 import sys
 
 
-Overlap = 30 #mm
-orient = [-45.0, 0.0, 45.0, 90.0, 90.0, 45.0, 0.0, -45.0]
-Film_thickness = 0.1 #mm
-Cores = 10 #number of cores for the job
+#Overlap = 30 #mm
+#orient = [-45.0, 0.0, 45.0, 90.0, 90.0, 45.0, 0.0, -45.0]
+#Film_thickness = 0.1 #mm
+#Cores = 10 #number of cores for the job
 
 class AdhesiveMaterial:
     def __init__(self, name, Ek, Gk, damage_initiation, damage_evolution):
@@ -42,6 +42,7 @@ AF163 = AdhesiveMaterial(
 
 def StrapJoint(overlap, adhesive, film_thickness, cores, L=150.0, B=25.0, th=2.0, pl=8, orientation_values= [-45.0, 0.0, 45.0, 90.0, 90.0, 45.0, 0.0, -45.0]):
     
+    overlap_str = str(overlap).replace(".", "p")  # Example: 30.0 -> 30p0, 30.5 -> 30p5
     # Format film thickness
     if film_thickness < 1:
         film_thickness_str = f"{int(film_thickness * 1000)}mu"  # e.g., 0.12 -> 120mu
@@ -57,7 +58,7 @@ def StrapJoint(overlap, adhesive, film_thickness, cores, L=150.0, B=25.0, th=2.0
         adhesive_name = adhesive.__class__.__name__
     
     adhesive_name = adhesive_name.replace(" ", "_").replace(".", "_").replace(",", "_")
-    part_name = f"SAP{overlap}_{film_thickness_str}_{adhesive_name}"
+    part_name = f"SAP{overlap_str}_{film_thickness_str}_{adhesive_name}"
 
     #Parameters
     pl_th = th / pl  #thickness of each ply
@@ -495,9 +496,13 @@ def StrapJoint(overlap, adhesive, film_thickness, cores, L=150.0, B=25.0, th=2.0
         resultsFormat=ODB, numDomains=cores, activateLoadBalancing=False, 
         numThreadsPerMpiProcess=1, numCpus=cores)
     
+    job = mdb.jobs[part_name]
+    job.submit()
+    job.waitForCompletion()
+
+    mdb.saveAs(pathName=f"{part_name}.cae")
     
 #    mdb.saveAs(
 #       pathName='C:/Users/nicol/Documents/Abaqus/StrapJointTest/StrapJointTest')
 
-StrapJoint(overlap=Overlap, adhesive=DP490, film_thickness=Film_thickness, cores=Cores)
-
+#StrapJoint(overlap=Overlap, adhesive=DP490, film_thickness=Film_thickness, cores=Cores)

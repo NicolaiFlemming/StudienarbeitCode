@@ -5,11 +5,38 @@ import __main__
 import sys
 
 
-Overlap = 30
+Overlap = 30 #mm
 orient = [-45.0, 0.0, 45.0, 90.0, 90.0, 45.0, 0.0, -45.0]
-cohesive_penalties = (6596.0, 2390.0, 2390.0)
+Film_thickness = 0.1 #mm
 
-def StrapJoint(overlap, cohesive_penalties, L=150.0, B=25.0, th=2.0, pl=8, orientation_values= [-45.0, 0.0, 45.0, 90.0, 90.0, 45.0, 0.0, -45.0]):
+class AdhesiveMaterial:
+    def __init__(self, Ek, Gk, damage_initiation, damage_evolution):
+        self.Ek = Ek
+        self.Gk = Gk
+        self.damage_initiation = damage_initiation
+        self.damage_evolution = damage_evolution
+
+    def cohesive_penalties(self, thickness):
+        Kn = self.Ek / thickness
+        Ks = self.Gk / thickness
+        Kt = Ks
+        return (Kn, Ks, Kt)
+
+DP490 = AdhesiveMaterial(
+    Ek=659.6,
+    Gk=239.0,
+    damage_initiation=(30.112, 36.0, 36.0),
+    damage_evolution=(0.9055, 2.3213, 2.3213),
+)
+
+AF163 = AdhesiveMaterial(
+    Ek=1110.0,
+    Gk=413.69,
+    damage_initiation=(48.26, 47.92, 47.92),
+    damage_evolution=(3.8, 9.8, 9.8),
+)
+
+def StrapJoint(overlap, adhesive, L=150.0, B=25.0, th=2.0, pl=8, orientation_values= [-45.0, 0.0, 45.0, 90.0, 90.0, 45.0, 0.0, -45.0]):
 
     #Parameters
     pl_th = th / pl  #thickness of each ply
@@ -336,11 +363,11 @@ def StrapJoint(overlap, cohesive_penalties, L=150.0, B=25.0, th=2.0, pl=8, orien
         pressureOverclosure=HARD, allowSeparation=ON, 
         constraintEnforcementMethod=DEFAULT)
     mymodel.interactionProperties['Cohesive'].CohesiveBehavior(
-        defaultPenalties=OFF, table=(cohesive_penalties, ))
+        defaultPenalties=OFF, table=(adhesive.cohesive_penalties(film_thickness), ))
     mymodel.interactionProperties['Cohesive'].Damage(
-        criterion=QUAD_TRACTION, initTable=((30.112, 36.0, 36.0), ), 
+        criterion=QUAD_TRACTION, initTable=(adhesive.damage_initiation, ), 
         useEvolution=ON, evolutionType=ENERGY, useMixedMode=ON, 
-        mixedModeType=BK, exponent=1.0, evolTable=((0.9055, 2.3213, 2.3213), ))
+        mixedModeType=BK, exponent=1.0, evolTable=(adhesive.damage_evolution, ))
     
     #create interactions
     mymodel.ContactExp(name='Int-1', createStepName='Initial')
@@ -451,5 +478,5 @@ def StrapJoint(overlap, cohesive_penalties, L=150.0, B=25.0, th=2.0, pl=8, orien
 #    mdb.saveAs(
 #       pathName='C:/Users/nicol/Documents/Abaqus/StrapJointTest/StrapJointTest')
 
-StrapJoint(overlap=Overlap, cohesive_penalties=cohesive_penalties)
+StrapJoint(overlap=Overlap, adhesive=DP490, film_thickness=Film_thickness)
 

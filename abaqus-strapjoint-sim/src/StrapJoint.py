@@ -478,12 +478,12 @@ def StrapJoint(overlap, adhesive, film_thickness, cores, L=150.0, B=25.0, th=2.0
         
     regionDef=mymodel.rootAssembly.sets['ZugMesspunkt']
     mymodel.HistoryOutputRequest(name='H-Output-2', 
-        createStepName='Step-1', variables=('RF1', 'U1'), numIntervals=100, 
+        createStepName='Step-1', variables=('RF1', 'U1'), numIntervals=200, 
         region=regionDef, sectionPoints=DEFAULT, rebar=EXCLUDE)
     
     regionDef=mymodel.rootAssembly.sets['ZugMesspunkt']
     mymodel.HistoryOutputRequest(name='H-Output-Criteria', 
-        createStepName='Step-1', variables=('RF1', ), numIntervals=100, 
+        createStepName='Step-1', variables=('RF1', ), numIntervals=200, 
         region=regionDef, filter='MinValue', sectionPoints=DEFAULT, 
         rebar=EXCLUDE)
    

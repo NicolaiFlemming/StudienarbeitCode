@@ -41,7 +41,7 @@ Simulation results and CAE files will be saved in the root directory.
 
 ## Monitoring
 
-Monitor the current progress by running:
+Monitor the current progress by running this code in a separate terminal at the root directory:
 
 ```sh
 Get-Content -Wait -Path ./<part_name>.sta

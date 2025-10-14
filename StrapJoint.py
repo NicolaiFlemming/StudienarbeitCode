@@ -8,6 +8,7 @@ import sys
 Overlap = 30 #mm
 orient = [-45.0, 0.0, 45.0, 90.0, 90.0, 45.0, 0.0, -45.0]
 Film_thickness = 0.1 #mm
+Cores = 28 #number of cores for the job
 
 class AdhesiveMaterial:
     def __init__(self, Ek, Gk, damage_initiation, damage_evolution):
@@ -36,7 +37,7 @@ AF163 = AdhesiveMaterial(
     damage_evolution=(3.8, 9.8, 9.8),
 )
 
-def StrapJoint(overlap, adhesive, film_thickness, L=150.0, B=25.0, th=2.0, pl=8, orientation_values= [-45.0, 0.0, 45.0, 90.0, 90.0, 45.0, 0.0, -45.0]):
+def StrapJoint(overlap, adhesive, film_thickness, cores, L=150.0, B=25.0, th=2.0, pl=8, orientation_values= [-45.0, 0.0, 45.0, 90.0, 90.0, 45.0, 0.0, -45.0]):
 
     #Parameters
     pl_th = th / pl  #thickness of each ply
@@ -471,12 +472,12 @@ def StrapJoint(overlap, adhesive, film_thickness, L=150.0, B=25.0, th=2.0, pl=8,
         memoryUnits=PERCENTAGE, explicitPrecision=SINGLE, 
         nodalOutputPrecision=SINGLE, echoPrint=OFF, modelPrint=OFF, 
         contactPrint=OFF, historyPrint=OFF, userSubroutine='', scratch='', 
-        resultsFormat=ODB, numDomains=10, activateLoadBalancing=False, 
-        numThreadsPerMpiProcess=1, numCpus=10)
+        resultsFormat=ODB, numDomains=cores, activateLoadBalancing=False, 
+        numThreadsPerMpiProcess=1, numCpus=cores)
     
     
 #    mdb.saveAs(
 #       pathName='C:/Users/nicol/Documents/Abaqus/StrapJointTest/StrapJointTest')
 
-StrapJoint(overlap=Overlap, adhesive=DP490, film_thickness=Film_thickness)
+StrapJoint(overlap=Overlap, adhesive=DP490, film_thickness=Film_thickness, cores=Cores)
 

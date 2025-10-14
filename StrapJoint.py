@@ -38,7 +38,7 @@ AF163 = AdhesiveMaterial(
 )
 
 def StrapJoint(overlap, adhesive, film_thickness, cores, L=150.0, B=25.0, th=2.0, pl=8, orientation_values= [-45.0, 0.0, 45.0, 90.0, 90.0, 45.0, 0.0, -45.0]):
-
+    part_name = f"SAP{overlap}_{film_thickness}_{adhesive.__class__.__name__}"
     #Parameters
     pl_th = th / pl  #thickness of each ply
     LStrap = 2 * overlap
@@ -467,7 +467,7 @@ def StrapJoint(overlap, adhesive, film_thickness, cores, L=150.0, B=25.0, th=2.0
         rebar=EXCLUDE)
    
     #create job
-    mdb.Job(name='Test1', model='Model-1', description='', type=ANALYSIS, 
+    mdb.Job(name=part_name, model='Model-1', description='', type=ANALYSIS, 
         atTime=None, waitMinutes=0, waitHours=0, queue=None, memory=90, 
         memoryUnits=PERCENTAGE, explicitPrecision=SINGLE, 
         nodalOutputPrecision=SINGLE, echoPrint=OFF, modelPrint=OFF, 

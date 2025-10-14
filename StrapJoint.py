@@ -8,10 +8,11 @@ import sys
 Overlap = 30 #mm
 orient = [-45.0, 0.0, 45.0, 90.0, 90.0, 45.0, 0.0, -45.0]
 Film_thickness = 0.1 #mm
-Cores = 28 #number of cores for the job
+Cores = 10 #number of cores for the job
 
 class AdhesiveMaterial:
-    def __init__(self, Ek, Gk, damage_initiation, damage_evolution):
+    def __init__(self, name, Ek, Gk, damage_initiation, damage_evolution):
+        self.name = name
         self.Ek = Ek
         self.Gk = Gk
         self.damage_initiation = damage_initiation
@@ -24,6 +25,7 @@ class AdhesiveMaterial:
         return (Kn, Ks, Kt)
 
 DP490 = AdhesiveMaterial(
+    name = "DP490",
     Ek=659.6,
     Gk=239.0,
     damage_initiation=(30.112, 36.0, 36.0),
@@ -31,6 +33,7 @@ DP490 = AdhesiveMaterial(
 )
 
 AF163 = AdhesiveMaterial(
+    name = "AF163",
     Ek=1110.0,
     Gk=413.69,
     damage_initiation=(48.26, 47.92, 47.92),
@@ -38,7 +41,24 @@ AF163 = AdhesiveMaterial(
 )
 
 def StrapJoint(overlap, adhesive, film_thickness, cores, L=150.0, B=25.0, th=2.0, pl=8, orientation_values= [-45.0, 0.0, 45.0, 90.0, 90.0, 45.0, 0.0, -45.0]):
-    part_name = f"SAP{overlap}_{film_thickness}_{adhesive.__class__.__name__}"
+    
+    # Format film thickness
+    if film_thickness < 1:
+        film_thickness_str = f"{int(film_thickness * 1000)}mu"  # e.g., 0.12 -> 120mu
+    else:
+        film_thickness_str = str(film_thickness).replace(".", "p")  # e.g., 1.5 -> 1p5
+    
+    if adhesive is None:
+        adhesive_name = "None"
+    elif hasattr(adhesive, 'name'):
+        adhesive_name = adhesive.name
+    else:
+        # fallback to class name
+        adhesive_name = adhesive.__class__.__name__
+    
+    adhesive_name = adhesive_name.replace(" ", "_").replace(".", "_").replace(",", "_")
+    part_name = f"SAP{overlap}_{film_thickness_str}_{adhesive_name}"
+
     #Parameters
     pl_th = th / pl  #thickness of each ply
     LStrap = 2 * overlap

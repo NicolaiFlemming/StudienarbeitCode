@@ -17,9 +17,7 @@ abaqus-strapjoint-sim/
 
 From the root directory (`abaqus-strapjoint-sim`), execute:
 
-```sh
-abaqus cae noGUI=src/run_simulations.py
-```
+
 
 This will read the simulation scenarios from `inputs/sim_params.csv` and run each scenario in Abaqus CAE using the [`StrapJoint`](src/StrapJoint.py) model.
 
@@ -40,3 +38,11 @@ Overlap,Adhesive,Film_thickness,Cores
 ## Output
 
 Simulation results and CAE files will be saved in the root directory.
+
+## Monitoring
+
+Monitor the current progress by running:
+
+```sh
+Get-Content -Wait -Path ./<part_name>.sta
+```

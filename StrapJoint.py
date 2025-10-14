@@ -36,7 +36,7 @@ AF163 = AdhesiveMaterial(
     damage_evolution=(3.8, 9.8, 9.8),
 )
 
-def StrapJoint(overlap, adhesive, L=150.0, B=25.0, th=2.0, pl=8, orientation_values= [-45.0, 0.0, 45.0, 90.0, 90.0, 45.0, 0.0, -45.0]):
+def StrapJoint(overlap, adhesive, film_thickness, L=150.0, B=25.0, th=2.0, pl=8, orientation_values= [-45.0, 0.0, 45.0, 90.0, 90.0, 45.0, 0.0, -45.0]):
 
     #Parameters
     pl_th = th / pl  #thickness of each ply

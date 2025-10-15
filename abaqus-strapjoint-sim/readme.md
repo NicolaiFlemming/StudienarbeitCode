@@ -17,6 +17,10 @@ abaqus-strapjoint-sim/
 
 From the root directory (`abaqus-strapjoint-sim`), execute:
 
+```sh
+abaqus cae noGui=src/sun_simulations.py
+```
+
 This will read the simulation scenarios from `inputs/sim_params.csv` and run each scenario in Abaqus CAE using the [`StrapJoint`](src/StrapJoint.py) model.
 
 ## Requirements

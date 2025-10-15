@@ -7,7 +7,7 @@ This project automates the setup and execution of strap joint simulations in Aba
 ```
 abaqus-strapjoint-sim/
 ├── inputs/
-│   └── sim_params.csv         # CSV file with simulation parameters
+│   └── sim_params.csv         # CSV file with simulation parameters generated using the R script in doe/ccdplan
 ├── src/
 │   ├── run_simulations.py     # Main script to run all simulations
 │   └── StrapJoint.py          # Contains the StrapJoint model and material definitions

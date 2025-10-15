@@ -4,7 +4,7 @@ This project automates the setup and execution of strap joint simulations in Aba
 
 ## File Structure
 
-```
+```text
 abaqus-strapjoint-sim/
 ├── inputs/
 │   └── sim_params.csv         # CSV file with simulation parameters generated using the R script in doe/ccdplan
@@ -17,8 +17,6 @@ abaqus-strapjoint-sim/
 
 From the root directory (`abaqus-strapjoint-sim`), execute:
 
-
-
 This will read the simulation scenarios from `inputs/sim_params.csv` and run each scenario in Abaqus CAE using the [`StrapJoint`](src/StrapJoint.py) model.
 
 ## Requirements
@@ -30,7 +28,7 @@ This will read the simulation scenarios from `inputs/sim_params.csv` and run eac
 
 Edit [`inputs/sim_params.csv`](inputs/sim_params.csv) to define your simulation scenarios. Example:
 
-```
+```text
 Overlap,Adhesive,Film_thickness,Cores
 30.0,DP490,0.1,10
 ```

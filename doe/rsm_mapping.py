@@ -96,7 +96,7 @@ plt.xlabel('Overlap (mm)')
 plt.ylabel('Adhesive Thickness (mm)')
 plt.title('2D Response Surface Contour Plot (Coded Model)')
 plt.legend()
-plt.savefig('rsm_2d_contour_plot.png')
+plt.savefig('rsm_2d_contour_plot.svg')
 plt.close() # Close plot figure
 
 # =====================================================================
@@ -117,5 +117,5 @@ ax.set_ylabel('Adhesive Thickness (mm)')
 ax.set_zlabel('Predicted Max_RF1 (N)')
 ax.set_title('3D Response Surface Plot (Coded Model)')
 ax.legend()
-plt.savefig('rsm_3d_surface_plot.png')
+plt.savefig('rsm_3d_surface_plot.svg')
 plt.show()

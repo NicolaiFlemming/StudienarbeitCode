@@ -4,7 +4,7 @@ import pandas as pd
 import os
 
 Cores = 28
-Adhesive = 'DP490'  # 'AF163' or 'DP490'
+Adhesive = 'AF163'  # 'AF163' or 'DP490'
 
 #create a central composite design with 2 factors and 2 center points, one for the factorial points and one for the axial points
 design = ccdesign(2, center=(1, 1), face='ccc')

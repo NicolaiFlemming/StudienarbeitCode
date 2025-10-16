@@ -1,4 +1,3 @@
-Ignore rsm_2d_contour_plot.svg
-Ignore rsm_3d_surface_plot.svg
+*.svg
 # Ignore simulation parameter CSV file
 # inputs/sim_params.csv

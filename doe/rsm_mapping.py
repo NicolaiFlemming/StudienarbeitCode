@@ -100,22 +100,36 @@ plt.savefig('rsm_2d_contour_plot.svg')
 plt.close() # Close plot figure
 
 # =====================================================================
-# 6. Generate 3D Response Surface Plot
+# 6. Generate Combined 3D Surface Plot with Contour at Base
 # =====================================================================
 fig = plt.figure(figsize=(12, 10))
 ax = fig.add_subplot(111, projection='3d')
 
 # Plot the surface
-ax.plot_surface(X1_grid_u, X2_grid_u, Y_pred, cmap='viridis', alpha=0.8)
+surf = ax.plot_surface(X1_grid_u, X2_grid_u, Y_pred, cmap='viridis', alpha=0.8)
 
-# Plot the actual data points
-ax.scatter(df['Overlap_mm'], df['Adhesive_Thickness_mm'], df['Max_RF1'],
-           c='red', marker='o', s=50, label='Actual Data')
+# Add filled contour plot at the base
+zmin = Y_pred.min()
+offset = zmin - (Y_pred.max() - zmin) * 0.1  # Offset slightly below the minimum
+contour = ax.contourf(X1_grid_u, X2_grid_u, Y_pred, 
+                     zdir='z', offset=offset, levels=20, cmap='viridis')
 
+# Plot the actual data points in 3D only
+scatter = ax.scatter(df['Overlap_mm'], df['Adhesive_Thickness_mm'], df['Max_RF1'],
+                    c='red', marker='o', s=50, edgecolors='k', label='Actual Data Points')
+
+# Adjust the z-axis limits to accommodate the contour plot
+ax.set_zlim(offset, Y_pred.max())
+
+# Add labels and title
 ax.set_xlabel('Overlap (mm)')
 ax.set_ylabel('Adhesive Thickness (mm)')
 ax.set_zlabel('Predicted Max_RF1 (N)')
-ax.set_title('3D Response Surface Plot (Coded Model)')
+ax.set_title('3D Response Surface Plot with Base Contour (Coded Model)')
+
+# Add colorbar
+fig.colorbar(surf, ax=ax, shrink=0.5, aspect=5, label='Predicted Max_RF1 (N)')
+
 ax.legend()
-plt.savefig('rsm_3d_surface_plot.svg')
+plt.savefig('rsm_3d_surface_with_contour.svg')
 plt.show()

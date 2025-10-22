@@ -1,2 +1,3 @@
+*.svg
 # Ignore simulation parameter CSV file
 # inputs/sim_params.csv

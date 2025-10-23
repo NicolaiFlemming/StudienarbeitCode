@@ -10,7 +10,7 @@ Adhesive = 'DP490'  # 'AF163' or 'DP490'
 # Define the number of factors (d) and the number of samples (n)
 d = 2  # Number of factors (Overlap, Film_thickness)
 # Number of samples
-n = 10 * d # n = 20
+n = 15 * d # n = 30
 
 # --- 1. Generate the Latin Hypercube Design (LHS) ---
 # 'm' for maximin (minimax) distance criterion, ensuring optimal space-filling.

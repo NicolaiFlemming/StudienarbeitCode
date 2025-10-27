@@ -4,7 +4,7 @@ import os
 import sys
 import tkinter as tk
 from tkinter import filedialog
-from krg_training import train_and_predict_kriging
+from krg_training_new import train_and_predict_kriging
 
 # Configuration parameters
 ADHESIVE_TYPE = 'DP490'  # Options: 'DP490' or 'AF163'

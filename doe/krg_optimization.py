@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import os
 import sys
+import time
 import subprocess
 import tkinter as tk
 from tkinter import filedialog
@@ -156,35 +157,31 @@ def run_optimization_loop(n_iterations=5, results_file='results.csv'):
             thickness_microns = format_thickness_for_filename(adhesive_thickness)
             job_name = f"SAP{overlap_str}_{thickness_microns}mu_{ADHESIVE_TYPE}"
             
-            # Launch Abaqus simulation
+            # Launch Abaqus simulation and capture output
             cmd = f'abaqus cae noGUI=run_simulations.py -- --single {overlap} {ADHESIVE_TYPE} {adhesive_thickness} {CPU_CORES}'
-            subprocess.run(cmd, shell=True)
+            result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
             
-            # Wait for the lock file to appear and then disappear
-            import time
-            lock_file = os.path.join(sim_dir, job_name + '.lck')
+            # Print Abaqus output
+            if result.stdout:
+                print(result.stdout)
+            if result.stderr:
+                print("Errors:", result.stderr)
             
-            # First wait for lock file to appear (max 5 minutes)
-            print("Waiting for simulation to start...")
-            start_time = time.time()
-            while not os.path.exists(lock_file):
-                if time.time() - start_time > 120:  # 2 minutes
-                    print("Error: Simulation did not start within 5 minutes")
-                    return
-                time.sleep(5)
+            print(f"Exit code: {result.returncode}")
             
-            # Then wait for lock file to disappear (max 4 hours)
-            print("Simulation is running... (waiting for completion)")
-            while os.path.exists(lock_file):
-                time.sleep(30)  # Check every 30 seconds
-                if time.time() - start_time > 3600:  # 1 hours
-                    print("Error: Simulation did not complete within 4 hours")
-                    return
-                print("Simulation still running... (checking every 30 seconds)")
-            
+            if result.returncode != 0:
+                print("Error: Abaqus simulation failed")
+                return
+                
             # Give a small buffer for file system operations
-            time.sleep(5)
+            time.sleep(2)
             
+            # Check if ODB file exists
+            odb_name = f"{job_name}.odb"
+            if not os.path.exists(odb_name):
+                print(f"Error: Expected ODB file {odb_name} not found after simulation")
+                return
+                
             print("Simulation completed successfully.")
             
             # 3. Extract RF1 from the ODB file

@@ -7,6 +7,19 @@ from tkinter import filedialog
 from krg_training import train_and_predict_kriging
 from odbAccess import openOdb
 
+import numpy as np
+import pandas as pd
+import os
+import sys
+import tkinter as tk
+from tkinter import filedialog
+from krg_training import train_and_predict_kriging
+
+# Configuration parameters
+ADHESIVE_TYPE = 'DP490'  # Options: 'DP490' or 'AF163'
+CPU_CORES = 28
+N_ITERATIONS = 5  # Number of optimization iterations
+
 def select_results_file():
     """Open a file dialog to select the results CSV file."""
     root = tk.Tk()
@@ -35,42 +48,32 @@ def format_overlap_for_filename(overlap_mm):
     decimal = int((overlap_mm - whole) * 100)
     return f"{whole}p{decimal:02d}"
 
-def extract_rf1_from_odb(overlap_mm, thickness_mm, adhesive='DP490'):
-    """Extract RF1 value from a single ODB file."""
+def get_rf1_from_odb(overlap_mm, thickness_mm):
+    """Get RF1 value from ODB file by running the extraction script in Abaqus."""
     # Format the filename components
     overlap_str = format_overlap_for_filename(overlap_mm)
     thickness_microns = format_thickness_for_filename(thickness_mm)
     
     # Construct the expected ODB filename
-    odb_name = f"SAP{overlap_str}_{thickness_microns}mu_{adhesive}.odb"
+    odb_name = f"SAP{overlap_str}_{thickness_microns}mu_{ADHESIVE_TYPE}.odb"
     odb_path = os.path.abspath(f"../abaqus-strapjoint-sim/src/{odb_name}")
     
     if not os.path.exists(odb_path):
         print(f"Error: ODB file not found: {odb_path}")
         return None
     
+    # Run the extraction script in Abaqus Python (no need for full CAE)
+    cmd = f'abaqus python extract_rf1_single.py "{odb_path}"'
+    os.system(cmd)
+    
+    # Read the result from the temporary file
     try:
-        odb = openOdb(odb_path)
-        rf1_max = None
-        
-        try:
-            step = odb.steps['Step-1']
-            
-            # Search all regions for RF1
-            for region_name, region in step.historyRegions.items():
-                if 'RF1' in region.historyOutputs.keys():
-                    rf1_data = region.historyOutputs['RF1'].data
-                    rf1_local_max = max(v[1] for v in rf1_data)
-                    if rf1_max is None or rf1_local_max > rf1_max:
-                        rf1_max = rf1_local_max
-            
-            return rf1_max
-            
-        finally:
-            odb.close()
-            
-    except Exception as e:
-        print(f"Error processing ODB file: {e}")
+        with open('rf1_result.txt', 'r') as f:
+            rf1_value = float(f.read().strip())
+        os.remove('rf1_result.txt')  # Clean up
+        return rf1_value
+    except (FileNotFoundError, ValueError) as e:
+        print(f"Error reading RF1 value: {e}")
         return None
 
 def update_results_csv(overlap, thickness, rf1_value, results_file='results.csv'):
@@ -88,13 +91,13 @@ def update_results_csv(overlap, thickness, rf1_value, results_file='results.csv'
         # Create new file with header
         new_result.to_csv(results_file, index=False)
 
-def add_point_to_sim_params(overlap, adhesive_thickness, adhesive='DP490', cores=28):
+def add_point_to_sim_params(overlap, adhesive_thickness):
     """Add a new point to the simulation parameters CSV file."""
     new_point = pd.DataFrame({
         'Overlap': [overlap],
-        'Adhesive': [adhesive],
+        'Adhesive': [ADHESIVE_TYPE],
         'Film_thickness': [adhesive_thickness],
-        'Cores': [cores]
+        'Cores': [CPU_CORES]
     })
     
     sim_params_path = '../abaqus-strapjoint-sim/inputs/sim_params.csv'
@@ -125,12 +128,12 @@ def run_optimization_loop(n_iterations=5, results_file='results.csv'):
         # 2. Run the simulation for just this point
         print("\nRunning Abaqus simulation for optimized point...")
         os.chdir('../abaqus-strapjoint-sim/src')
-        cmd = f'abaqus cae noGUI=run_simulations.py -- --single {overlap} DP490 {adhesive_thickness} 28'
+        cmd = f'abaqus cae noGUI=run_simulations.py -- --single {overlap} {ADHESIVE_TYPE} {adhesive_thickness} {CPU_CORES}'
         os.system(cmd)
         
         # 3. Extract RF1 from the ODB file
         print("\nExtracting results from ODB file...")
-        rf1_value = extract_rf1_from_odb(overlap, adhesive_thickness)
+        rf1_value = get_rf1_from_odb(overlap, adhesive_thickness)
         
         if rf1_value is not None:
             # 4. Update results.csv with the new point
@@ -149,11 +152,11 @@ def run_optimization_loop(n_iterations=5, results_file='results.csv'):
         print("-" * 50)
 
 if __name__ == '__main__':
-    # Number of optimization iterations
-    N_ITERATIONS = 5
-    
     print("Starting Kriging model optimization loop")
-    print(f"Number of iterations: {N_ITERATIONS}")
+    print(f"Configuration:")
+    print(f"- Adhesive Type: {ADHESIVE_TYPE}")
+    print(f"- CPU Cores: {CPU_CORES}")
+    print(f"- Number of iterations: {N_ITERATIONS}")
     print("-" * 50)
     
     # Select the results file using file dialog

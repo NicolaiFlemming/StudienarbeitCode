@@ -11,7 +11,7 @@ def initialize_model():
     """Initialize the Gaussian Process model with default parameters."""
     # Kernel Definition: Anisotropic Matérn 5/2 kernel
     initial_length_scales = [1.0, 1.0]
-    bounds_ls = (1e-2, 1e5)
+    bounds_ls = (1e-2, 1e8)
     
     kernel = ConstantKernel(constant_value=1.0, constant_value_bounds=(1e-2, 1e5)) \
             * Matern(length_scale=initial_length_scales,

@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import os
 import sys
+import subprocess
 import tkinter as tk
 from tkinter import filedialog
 from krg_training import train_and_predict_kriging
@@ -149,15 +150,41 @@ def run_optimization_loop(n_iterations=5, results_file='results.csv'):
         try:
             os.chdir(sim_dir)
             print("\nRunning Abaqus simulation...")
-            cmd = f'abaqus cae noGUI=run_simulations.py -- --single {overlap} {ADHESIVE_TYPE} {adhesive_thickness} {CPU_CORES}'
             
-            # Use subprocess to get the return code
-            import subprocess
-            result = subprocess.run(cmd, shell=True)
-            if result.returncode != 0:
-                print(f"Error: Abaqus simulation failed with return code {result.returncode}")
-                return
-                
+            # First, construct the job name as it will appear in Abaqus
+            overlap_str = format_overlap_for_filename(overlap)
+            thickness_microns = format_thickness_for_filename(adhesive_thickness)
+            job_name = f"SAP{overlap_str}_{thickness_microns}mu_{ADHESIVE_TYPE}"
+            
+            # Launch Abaqus simulation
+            cmd = f'abaqus cae noGUI=run_simulations.py -- --single {overlap} {ADHESIVE_TYPE} {adhesive_thickness} {CPU_CORES}'
+            subprocess.run(cmd, shell=True)
+            
+            # Wait for the lock file to appear and then disappear
+            import time
+            lock_file = os.path.join(sim_dir, job_name + '.lck')
+            
+            # First wait for lock file to appear (max 5 minutes)
+            print("Waiting for simulation to start...")
+            start_time = time.time()
+            while not os.path.exists(lock_file):
+                if time.time() - start_time > 120:  # 2 minutes
+                    print("Error: Simulation did not start within 5 minutes")
+                    return
+                time.sleep(5)
+            
+            # Then wait for lock file to disappear (max 4 hours)
+            print("Simulation is running... (waiting for completion)")
+            while os.path.exists(lock_file):
+                time.sleep(30)  # Check every 30 seconds
+                if time.time() - start_time > 3600:  # 1 hours
+                    print("Error: Simulation did not complete within 4 hours")
+                    return
+                print("Simulation still running... (checking every 30 seconds)")
+            
+            # Give a small buffer for file system operations
+            time.sleep(5)
+            
             print("Simulation completed successfully.")
             
             # 3. Extract RF1 from the ODB file

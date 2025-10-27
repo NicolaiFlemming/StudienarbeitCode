@@ -212,12 +212,12 @@ def run_optimization_loop(n_iterations=5, results_file='results.csv'):
             
             # 3. Extract RF1 from the ODB file
             print("\nExtracting results from ODB file...")
-            rf1_value = get_rf1_from_odb(overlap, adhesive_thickness)
+            rf1_value, region_name = get_rf1_from_odb(overlap, adhesive_thickness)
             
-            if rf1_value is not None:
+            if rf1_value is not None and region_name is not None:
                 # 4. Update results.csv with the new point
                 os.chdir(original_dir)  # Return to original directory
-                update_results_csv(overlap, adhesive_thickness, rf1_value, results_file)
+                update_results_csv(overlap, adhesive_thickness, rf1_value, region_name, results_file)
                 print(f"Results updated: RF1 = {rf1_value:.2f}")
                 
                 # 5. Add point to sim_params.csv for record keeping

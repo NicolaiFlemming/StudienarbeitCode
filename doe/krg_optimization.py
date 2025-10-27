@@ -41,27 +41,34 @@ def format_overlap_for_filename(overlap_mm):
 
 def get_rf1_from_odb(overlap_mm, thickness_mm):
     """Get RF1 value from ODB file by running the extraction script in Abaqus."""
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    abaqus_dir = os.path.abspath(os.path.join(script_dir, '..', 'abaqus-strapjoint-sim', 'src'))
+    
     # Format the filename components
     overlap_str = format_overlap_for_filename(overlap_mm)
     thickness_microns = format_thickness_for_filename(thickness_mm)
     
     # Construct the expected ODB filename
     odb_name = f"SAP{overlap_str}_{thickness_microns}mu_{ADHESIVE_TYPE}.odb"
-    odb_path = os.path.abspath(f"../abaqus-strapjoint-sim/src/{odb_name}")
+    odb_path = os.path.join(abaqus_dir, odb_name)
     
     if not os.path.exists(odb_path):
         print(f"Error: ODB file not found: {odb_path}")
         return None
     
+    # Construct the path to the extraction script
+    extract_script = os.path.join(script_dir, 'extract_rf1_single.py')
+    
     # Run the extraction script in Abaqus Python (no need for full CAE)
-    cmd = f'abaqus python extract_rf1_single.py "{odb_path}"'
+    cmd = f'abaqus python "{extract_script}" "{odb_path}"'
     os.system(cmd)
     
-    # Read the result from the temporary file
+    # Read the result from the temporary file (in current directory)
+    result_file = os.path.join(os.getcwd(), 'rf1_result.txt')
     try:
-        with open('rf1_result.txt', 'r') as f:
+        with open(result_file, 'r') as f:
             rf1_value = float(f.read().strip())
-        os.remove('rf1_result.txt')  # Clean up
+        os.remove(result_file)  # Clean up
         return rf1_value
     except (FileNotFoundError, ValueError) as e:
         print(f"Error reading RF1 value: {e}")
@@ -91,7 +98,14 @@ def add_point_to_sim_params(overlap, adhesive_thickness):
         'Cores': [CPU_CORES]
     })
     
-    sim_params_path = '../abaqus-strapjoint-sim/inputs/sim_params.csv'
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    sim_params_path = os.path.abspath(os.path.join(
+        script_dir, '..', 'abaqus-strapjoint-sim', 'inputs', 'sim_params.csv'
+    ))
+    
+    # Ensure directory exists
+    os.makedirs(os.path.dirname(sim_params_path), exist_ok=True)
+    
     if os.path.exists(sim_params_path):
         new_point.to_csv(sim_params_path, mode='a', header=False, index=False)
     else:
@@ -121,28 +135,40 @@ def run_optimization_loop(n_iterations=5, results_file='results.csv'):
         print(f"Adhesive Thickness: {adhesive_thickness:.2f} mm")
         print(f"Standard Deviation: {std_dev:.2f}")
         
+        # Get the absolute paths
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        sim_dir = os.path.abspath(os.path.join(script_dir, '..', 'abaqus-strapjoint-sim', 'src'))
+        
         # 2. Run the simulation for just this point
         print("\nRunning Abaqus simulation for optimized point...")
-        os.chdir('../abaqus-strapjoint-sim/src')
-        cmd = f'abaqus cae noGUI=run_simulations.py -- --single {overlap} {ADHESIVE_TYPE} {adhesive_thickness} {CPU_CORES}'
-        os.system(cmd)
+        print(f"Simulation directory: {sim_dir}")
         
-        # 3. Extract RF1 from the ODB file
-        print("\nExtracting results from ODB file...")
-        rf1_value = get_rf1_from_odb(overlap, adhesive_thickness)
+        # Save current directory
+        original_dir = os.getcwd()
         
-        if rf1_value is not None:
-            # 4. Update results.csv with the new point
-            os.chdir('../../doe')  # Return to original directory
-            update_results_csv(overlap, adhesive_thickness, rf1_value, results_file)
-            print(f"Results updated: RF1 = {rf1_value:.2f}")
+        try:
+            os.chdir(sim_dir)
+            cmd = f'abaqus cae noGUI=run_simulations.py -- --single {overlap} {ADHESIVE_TYPE} {adhesive_thickness} {CPU_CORES}'
+            os.system(cmd)
             
-            # 5. Add point to sim_params.csv for record keeping
-            add_point_to_sim_params(overlap, adhesive_thickness)
-        else:
-            print("Failed to extract results from ODB file. Skipping this iteration.")
-            os.chdir('../../doe')  # Return to original directory
-            continue
+            # 3. Extract RF1 from the ODB file
+            print("\nExtracting results from ODB file...")
+            rf1_value = get_rf1_from_odb(overlap, adhesive_thickness)
+            
+            if rf1_value is not None:
+                # 4. Update results.csv with the new point
+                os.chdir(original_dir)  # Return to original directory
+                update_results_csv(overlap, adhesive_thickness, rf1_value, results_file)
+                print(f"Results updated: RF1 = {rf1_value:.2f}")
+                
+                # 5. Add point to sim_params.csv for record keeping
+                add_point_to_sim_params(overlap, adhesive_thickness)
+            else:
+                print("Failed to extract results from ODB file. Skipping this iteration.")
+                
+        finally:
+            # Always return to original directory
+            os.chdir(original_dir)
         
         print(f"Iteration {iteration + 1} complete.\n")
         print("-" * 50)

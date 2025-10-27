@@ -9,24 +9,30 @@ from tkinter import filedialog
 
 # --- Step 1: Data Structure and Preprocessing ---
 
-print("Step 1: Loading and Preprocessing Data")
+def load_and_process_data(file_path=None):
+    global FILE_PATH
+    
+    if file_path is None:
+        # Use a file dialog to select the CSV file
+        root = tk.Tk()
+        root.withdraw()  # hide the main window
+        root.lift()  # Bring the dialog to front
+        root.focus_force()  # Force focus on the dialog
+        FILE_PATH = filedialog.askopenfilename(
+            title="Select CSV file",
+            filetypes=[("CSV files", "*.csv"), ("All files", "*.*")]
+        )
+        
+        if not FILE_PATH:
+            print("No file selected. Exiting.")
+            exit()
+    else:
+        FILE_PATH = file_path
 
-# Define the file path
-# Use a file dialog to select the CSV file
-root = tk.Tk()
-root.withdraw()  # hide the main window
-root.lift()  # Bring the dialog to front
-root.focus_force()  # Force focus on the dialog
-FILE_PATH = filedialog.askopenfilename(
-    title="Select CSV file",
-    filetypes=[("CSV files", "*.csv"), ("All files", "*.*")]
-)
+    print("Step 1: Loading and Preprocessing Data")
+    print(f"Using file: {FILE_PATH}")
 
-if not FILE_PATH:
-    print("No file selected. Exiting.")
-    exit()
-
-# Load the data using pandas
+    # Load the data using pandas
 try:
     data = pd.read_csv(FILE_PATH)
 except FileNotFoundError:
@@ -135,13 +141,14 @@ Y_pred_mean, Y_pred_std = gp.predict(X_test_scaled, return_std=True)
 Y_pred_mean_grid = Y_pred_mean.reshape(xx1.shape)
 Y_pred_std_grid = Y_pred_std.reshape(xx1.shape)
 
-def train_and_predict_kriging(file_path=None):
+def train_and_predict_kriging(file_path=None, show_plots=False):
     """Train the Kriging model and return the point of highest uncertainty."""
-    global FILE_PATH
-    if file_path:
-        FILE_PATH = file_path
+    # Load and process the data
+    load_and_process_data(file_path)
     
-    # Run all the existing code up to this point
+    global X_train, Y_train, X_train_scaled, gp, xx1, xx2, Y_pred_std_grid
+    
+    # All the existing preprocessing and model training code will run here
     
     print("Prediction complete.")
 
@@ -158,10 +165,11 @@ def train_and_predict_kriging(file_path=None):
     
     return max_std_x1, max_std_x2, max_std_value
 
-if __name__ == '__main__':
+def create_plots():
+    """Create and save all plots."""
     print("\nPlotting results...")
-
-# Plot 1: Mean Prediction (BLUP) - 2D Contour
+    
+    # Plot 1: Mean Prediction (BLUP) - 2D Contour
 fig1 = plt.figure(figsize=(10, 8))
 ax1 = fig1.add_subplot(111)
 contour1 = ax1.contourf(xx1, xx2, Y_pred_mean_grid, levels=30, cmap='viridis')
@@ -226,4 +234,8 @@ plt.tight_layout()
 plt.savefig('kriging_3d_surface.svg')
 plt.show()
 
-print("\nScript finished.")
+if __name__ == '__main__':
+    # When run directly, show the file dialog and create plots
+    train_and_predict_kriging(show_plots=True)
+    create_plots()
+    print("\nScript finished.")

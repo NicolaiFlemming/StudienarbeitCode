@@ -5,15 +5,6 @@ import sys
 import tkinter as tk
 from tkinter import filedialog
 from krg_training import train_and_predict_kriging
-from odbAccess import openOdb
-
-import numpy as np
-import pandas as pd
-import os
-import sys
-import tkinter as tk
-from tkinter import filedialog
-from krg_training import train_and_predict_kriging
 
 # Configuration parameters
 ADHESIVE_TYPE = 'DP490'  # Options: 'DP490' or 'AF163'
@@ -108,11 +99,16 @@ def add_point_to_sim_params(overlap, adhesive_thickness):
 
 def run_optimization_loop(n_iterations=5, results_file='results.csv'):
     """Run the iterative optimization loop."""
+    print("\nRunning optimization loop with:")
+    print(f"Results file: {results_file}")
+    print(f"Number of iterations: {n_iterations}")
+    print("-" * 50)
+    
     for iteration in range(n_iterations):
         print(f"\nStarting iteration {iteration + 1}/{n_iterations}")
         
         # 1. Train Kriging model and get point of highest uncertainty
-        max_uncertainty_point = train_and_predict_kriging(results_file)
+        max_uncertainty_point = train_and_predict_kriging(results_file, show_plots=False)
         
         if max_uncertainty_point is None:
             print("Error in Kriging model training. Stopping optimization loop.")

@@ -69,24 +69,45 @@ def run_single_point(overlap, adhesive_name, film_thickness, cores):
     """Run simulation for a single point with given parameters."""
     try:
         print(f"Processing single point simulation:")
-        print(f"  Overlap: {overlap} mm, Adhesive: {adhesive_name}, Thickness: {film_thickness} mm, Cores: {cores}")
+        print(f"  Overlap: {overlap} mm")
+        print(f"  Adhesive: {adhesive_name}")
+        print(f"  Thickness: {film_thickness} mm")
+        print(f"  Cores: {cores}")
         
         # Get the corresponding material object
+        print("Getting adhesive object...")
         adhesive_object = get_adhesive_object(adhesive_name)
+        if adhesive_object is None:
+            print(f"Error: Could not get adhesive object for {adhesive_name}")
+            return False
+            
+        print("Starting StrapJoint simulation...")
         
-        # Call the StrapJoint function
-        StrapJoint(
-            overlap=overlap, 
-            adhesive=adhesive_object, 
-            film_thickness=film_thickness, 
-            cores=cores
-        )
+        # Call the StrapJoint function with explicit error handling
+        try:
+            from StrapJoint import StrapJoint
+            StrapJoint(
+                overlap=overlap, 
+                adhesive=adhesive_object, 
+                film_thickness=film_thickness, 
+                cores=cores
+            )
+        except ImportError as e:
+            print(f"Error importing StrapJoint module: {e}")
+            print(f"Current directory: {os.getcwd()}")
+            print(f"Python path: {sys.path}")
+            return False
+        except Exception as e:
+            print(f"Error in StrapJoint execution: {e}")
+            return False
         
-        print("Job finished successfully")
+        print("Job submitted and completed successfully")
         return True
         
     except Exception as e:
-        print(f"An error occurred during simulation: {e}")
+        print(f"An error occurred during simulation setup: {e}")
+        import traceback
+        traceback.print_exc()
         return False
 
 def main():
@@ -168,4 +189,8 @@ def main():
         print(f"An unexpected error occurred while reading the file: {e}")
 
 if __name__ == '__main__':
+    print("Starting run_simulations.py")
+    print(f"Current directory: {os.getcwd()}")
+    print(f"Command line arguments: {sys.argv}")
     main()
+    print("Finished run_simulations.py")

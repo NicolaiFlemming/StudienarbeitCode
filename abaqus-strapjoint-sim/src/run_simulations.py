@@ -111,30 +111,41 @@ def run_single_point(overlap, adhesive_name, film_thickness, cores):
         return False
 
 def main():
-    # Check if running in single point mode (via command line arguments)
-    if len(sys.argv) > 1 and sys.argv[1] == '--single':
-        if len(sys.argv) != 6:
-            print("Usage for single point: python run_simulations.py --single overlap adhesive film_thickness cores")
+    # Extract the --single argument position
+    try:
+        single_index = sys.argv.index('--single')
+    except ValueError:
+        single_index = -1
+
+    # Check if running in single point mode
+    if single_index != -1:
+        if len(sys.argv) < single_index + 5:
+            print("Usage for single point: abaqus cae noGUI=run_simulations.py -- --single overlap adhesive film_thickness cores")
             return
         
         try:
-            overlap = float(sys.argv[2])
-            adhesive_name = sys.argv[3]
-            film_thickness = float(sys.argv[4])
-            cores = int(sys.argv[5])
-            success = run_single_point(overlap, adhesive_name, film_thickness, cores)
+            # Arguments come after --single
+            overlap = float(sys.argv[single_index + 1])
+            adhesive_name = sys.argv[single_index + 2]
+            film_thickness = float(sys.argv[single_index + 3])
+            cores = int(sys.argv[single_index + 4])
             
-            if len(sys.argv) > 1:  # If running from command line arguments
-                sys.exit(0 if success else 1)  # Exit with status code
-            return success  # Otherwise just return the boolean
+            print(f"Running single point simulation with parameters:")
+            print(f"  Overlap: {overlap}")
+            print(f"  Adhesive: {adhesive_name}")
+            print(f"  Film thickness: {film_thickness}")
+            print(f"  Cores: {cores}")
+            
+            success = run_single_point(overlap, adhesive_name, film_thickness, cores)
+            sys.exit(0 if success else 1)
             
         except ValueError as e:
             print(f"Error in parameter conversion: {e}")
-            if len(sys.argv) > 1:  # If running from command line arguments
-                sys.exit(1)
-            return False
-    
+            sys.exit(1)
+            
     # Regular CSV mode
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.abspath(os.path.join(script_dir, '..'))
     params_file = os.path.join(project_root, 'inputs', 'sim_params.csv')
     
     if not os.path.exists(params_file):

@@ -40,7 +40,7 @@ def format_overlap_for_filename(overlap_mm):
     return str(overlap_mm).replace(".", "p")
 
 def get_rf1_from_odb(overlap_mm, thickness_mm):
-    """Get RF1 value from ODB file by running the extraction script in Abaqus."""
+    """Extract RF1 value and region from an ODB file."""
     script_dir = os.path.dirname(os.path.abspath(__file__))
     abaqus_dir = os.path.abspath(os.path.join(script_dir, '..', 'abaqus-strapjoint-sim', 'src'))
     
@@ -54,37 +54,65 @@ def get_rf1_from_odb(overlap_mm, thickness_mm):
     
     if not os.path.exists(odb_path):
         print(f"Error: ODB file not found: {odb_path}")
-        return None
+        return None, None
     
-    # Construct the path to the extraction script
-    extract_script = os.path.join(script_dir, 'extract_rf1_single.py')
-    
-    # Run the extraction script in Abaqus Python (no need for full CAE)
-    cmd = f'abaqus python "{extract_script}" "{odb_path}"'
-    os.system(cmd)
-    
-    # Read the result from the temporary file (in current directory)
-    result_file = os.path.join(os.getcwd(), 'rf1_result.txt')
     try:
-        with open(result_file, 'r') as f:
-            rf1_value = float(f.read().strip())
-        os.remove(result_file)  # Clean up
-        return rf1_value
-    except (FileNotFoundError, ValueError) as e:
-        print(f"Error reading RF1 value: {e}")
-        return None
+        from odbAccess import openOdb
+        odb = openOdb(odb_path)
+        
+        rf1_max = None
+        region_found = None
+        
+        try:
+            step = odb.steps['Step-1']
+            
+            # Search all regions for RF1
+            for region_name, region in step.historyRegions.items():
+                if 'RF1' in region.historyOutputs.keys():
+                    rf1_data = region.historyOutputs['RF1'].data
+                    rf1_local_max = max(v[1] for v in rf1_data)
+                    if rf1_max is None or rf1_local_max > rf1_max:
+                        rf1_max = rf1_local_max
+                        region_found = region_name
+            
+            if rf1_max is None:
+                print(f" No RF1 found in {odb_name}. Regions:")
+                for rn in step.historyRegions.keys():
+                    print("   ", rn)
+                print("----")
+                
+        finally:
+            odb.close()
+            
+        return rf1_max, region_found
+        
+    except Exception as e:
+        print(f"Error processing ODB file: {e}")
+        return None, None
 
-def update_results_csv(overlap, thickness, rf1_value, results_file='results.csv'):
+def update_results_csv(overlap, thickness, rf1_value, region_name, results_file='results.csv'):
     """Update the results CSV file with a new data point."""
+    # Create filename as it appears in the ODB
+    overlap_str = format_overlap_for_filename(overlap)
+    thickness_microns = format_thickness_for_filename(thickness)
+    odb_filename = f"SAP{overlap_str}_{thickness_microns}mu_{ADHESIVE_TYPE}.odb"
+    
     new_result = pd.DataFrame({
+        'ODB_File': [odb_filename],
         'Overlap_mm': [overlap],
         'Adhesive_Thickness_mm': [thickness],
-        'Max_RF1': [rf1_value]
+        'Adhesive': [ADHESIVE_TYPE],
+        'Max_RF1': [rf1_value],
+        'Region': [region_name]
     })
     
     if os.path.exists(results_file):
-        # Append without header
-        new_result.to_csv(results_file, mode='a', header=False, index=False)
+        if os.path.getsize(results_file) > 0:  # Only try to read if file is not empty
+            # Append without header
+            new_result.to_csv(results_file, mode='a', header=False, index=False)
+        else:
+            # Write with header if file is empty
+            new_result.to_csv(results_file, index=False)
     else:
         # Create new file with header
         new_result.to_csv(results_file, index=False)

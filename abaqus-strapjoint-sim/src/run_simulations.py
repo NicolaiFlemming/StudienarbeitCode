@@ -101,11 +101,17 @@ def main():
             adhesive_name = sys.argv[3]
             film_thickness = float(sys.argv[4])
             cores = int(sys.argv[5])
-            run_single_point(overlap, adhesive_name, film_thickness, cores)
-            return
+            success = run_single_point(overlap, adhesive_name, film_thickness, cores)
+            
+            if len(sys.argv) > 1:  # If running from command line arguments
+                sys.exit(0 if success else 1)  # Exit with status code
+            return success  # Otherwise just return the boolean
+            
         except ValueError as e:
             print(f"Error in parameter conversion: {e}")
-            return
+            if len(sys.argv) > 1:  # If running from command line arguments
+                sys.exit(1)
+            return False
     
     # Regular CSV mode
     params_file = os.path.join(project_root, 'inputs', 'sim_params.csv')

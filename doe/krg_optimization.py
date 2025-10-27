@@ -148,8 +148,17 @@ def run_optimization_loop(n_iterations=5, results_file='results.csv'):
         
         try:
             os.chdir(sim_dir)
+            print("\nRunning Abaqus simulation...")
             cmd = f'abaqus cae noGUI=run_simulations.py -- --single {overlap} {ADHESIVE_TYPE} {adhesive_thickness} {CPU_CORES}'
-            os.system(cmd)
+            
+            # Use subprocess to get the return code
+            import subprocess
+            result = subprocess.run(cmd, shell=True)
+            if result.returncode != 0:
+                print(f"Error: Abaqus simulation failed with return code {result.returncode}")
+                return
+                
+            print("Simulation completed successfully.")
             
             # 3. Extract RF1 from the ODB file
             print("\nExtracting results from ODB file...")

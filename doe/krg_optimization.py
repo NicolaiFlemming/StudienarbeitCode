@@ -40,7 +40,7 @@ def format_overlap_for_filename(overlap_mm):
     return str(overlap_mm).replace(".", "p")
 
 def get_rf1_from_odb(overlap_mm, thickness_mm):
-    """Extract RF1 value and region from an ODB file."""
+    """Extract RF1 value and region from an ODB file using abaqus python."""
     script_dir = os.path.dirname(os.path.abspath(__file__))
     abaqus_dir = os.path.abspath(os.path.join(script_dir, '..', 'abaqus-strapjoint-sim', 'src'))
     
@@ -57,37 +57,45 @@ def get_rf1_from_odb(overlap_mm, thickness_mm):
         return None, None
     
     try:
-        from odbAccess import openOdb
-        odb = openOdb(odb_path)
-        
-        rf1_max = None
-        region_found = None
-        
+        # Save current directory to return to it later
+        original_dir = os.getcwd()
         try:
-            step = odb.steps['Step-1']
+            # Change to the abaqus directory
+            os.chdir(abaqus_dir)
             
-            # Search all regions for RF1
-            for region_name, region in step.historyRegions.items():
-                if 'RF1' in region.historyOutputs.keys():
-                    rf1_data = region.historyOutputs['RF1'].data
-                    rf1_local_max = max(v[1] for v in rf1_data)
-                    if rf1_max is None or rf1_local_max > rf1_max:
-                        rf1_max = rf1_local_max
-                        region_found = region_name
+            # Run the extraction script in Abaqus Python
+            extract_script = os.path.join(script_dir, 'extract_rf1_single.py')
+            cmd = f'abaqus python "{extract_script}" "{odb_path}"'
+            result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
             
-            if rf1_max is None:
-                print(f" No RF1 found in {odb_name}. Regions:")
-                for rn in step.historyRegions.keys():
-                    print("   ", rn)
-                print("----")
-                
+            if result.returncode != 0:
+                print("Error running extraction script:")
+                print(result.stderr)
+                return None, None
+            
+            # Read results from the text file
+            result_file = 'rf1_result.txt'
+            if os.path.exists(result_file):
+                with open(result_file, 'r') as f:
+                    lines = f.readlines()
+                    if len(lines) >= 2:
+                        rf1_value = float(lines[0].strip())
+                        region_name = lines[1].strip()
+                        return rf1_value, region_name
+            
+            return None, None
+            
         finally:
-            odb.close()
+            os.chdir(original_dir)
+            # Clean up result file
+            if os.path.exists(os.path.join(abaqus_dir, 'rf1_result.txt')):
+                try:
+                    os.remove(os.path.join(abaqus_dir, 'rf1_result.txt'))
+                except Exception:
+                    pass
             
-        return rf1_max, region_found
-        
     except Exception as e:
-        print(f"Error processing ODB file: {e}")
+        print(f"Error in get_rf1_from_odb: {e}")
         return None, None
 
 def update_results_csv(overlap, thickness, rf1_value, region_name, results_file='results.csv'):

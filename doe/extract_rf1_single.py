@@ -3,10 +3,11 @@ import sys
 import os
 
 def extract_rf1_from_odb(odb_path):
-    """Extract RF1 value from a single ODB file."""
+    """Extract RF1 value and region from a single ODB file."""
     try:
         odb = openOdb(odb_path)
         rf1_max = None
+        region_found = None
         
         try:
             step = odb.steps['Step-1']
@@ -18,10 +19,17 @@ def extract_rf1_from_odb(odb_path):
                     rf1_local_max = max(v[1] for v in rf1_data)
                     if rf1_max is None or rf1_local_max > rf1_max:
                         rf1_max = rf1_local_max
+                        region_found = region_name
             
-            # Write result to a temporary file
+            if rf1_max is None:
+                print(f" No RF1 found in {odb_path}. Regions:")
+                for rn in step.historyRegions.keys():
+                    print("   ", rn)
+                print("----")
+            
+            # Write results to a temporary file
             with open('rf1_result.txt', 'w') as f:
-                f.write(str(rf1_max))
+                f.write(f"{rf1_max}\n{region_found}" if rf1_max is not None else "")
             
         finally:
             odb.close()

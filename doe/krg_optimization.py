@@ -36,10 +36,8 @@ def format_thickness_for_filename(thickness_mm):
     return int(thickness_mm * 1000)
 
 def format_overlap_for_filename(overlap_mm):
-    """Convert overlap value to filename format (e.g., 45.5 -> 45p50)."""
-    whole = int(overlap_mm)
-    decimal = int((overlap_mm - whole) * 100)
-    return f"{whole}p{decimal:02d}"
+    """Convert overlap value to filename format (e.g., 30.0 -> 30p0)."""
+    return str(overlap_mm).replace(".", "p")
 
 def get_rf1_from_odb(overlap_mm, thickness_mm):
     """Get RF1 value from ODB file by running the extraction script in Abaqus."""

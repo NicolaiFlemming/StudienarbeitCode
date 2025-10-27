@@ -135,20 +135,31 @@ Y_pred_mean, Y_pred_std = gp.predict(X_test_scaled, return_std=True)
 Y_pred_mean_grid = Y_pred_mean.reshape(xx1.shape)
 Y_pred_std_grid = Y_pred_std.reshape(xx1.shape)
 
-print("Prediction complete.")
+def train_and_predict_kriging(file_path=None):
+    """Train the Kriging model and return the point of highest uncertainty."""
+    global FILE_PATH
+    if file_path:
+        FILE_PATH = file_path
+    
+    # Run all the existing code up to this point
+    
+    print("Prediction complete.")
 
-# Find the point of maximum uncertainty
-max_std_idx = np.argmax(Y_pred_std_grid)
-max_std_x1 = xx1.ravel()[max_std_idx]
-max_std_x2 = xx2.ravel()[max_std_idx]
-max_std_value = Y_pred_std_grid.ravel()[max_std_idx]
+    # Find the point of maximum uncertainty
+    max_std_idx = np.argmax(Y_pred_std_grid)
+    max_std_x1 = xx1.ravel()[max_std_idx]
+    max_std_x2 = xx2.ravel()[max_std_idx]
+    max_std_value = Y_pred_std_grid.ravel()[max_std_idx]
 
-print(f"\nMaximum Uncertainty Point:")
-print(f"Overlap = {max_std_x1:.2f} mm")
-print(f"Adhesive Thickness = {max_std_x2:.2f} mm")
-print(f"Standard Deviation = {max_std_value:.2f}")
+    print(f"\nMaximum Uncertainty Point:")
+    print(f"Overlap = {max_std_x1:.2f} mm")
+    print(f"Adhesive Thickness = {max_std_x2:.2f} mm")
+    print(f"Standard Deviation = {max_std_value:.2f}")
+    
+    return max_std_x1, max_std_x2, max_std_value
 
-print("\nPlotting results...")
+if __name__ == '__main__':
+    print("\nPlotting results...")
 
 # Plot 1: Mean Prediction (BLUP) - 2D Contour
 fig1 = plt.figure(figsize=(10, 8))

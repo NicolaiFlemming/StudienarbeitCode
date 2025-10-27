@@ -65,9 +65,49 @@ def get_adhesive_object(name):
 # MAIN EXECUTION
 # ----------------------------------------------------------------------
 
+def run_single_point(overlap, adhesive_name, film_thickness, cores):
+    """Run simulation for a single point with given parameters."""
+    try:
+        print(f"Processing single point simulation:")
+        print(f"  Overlap: {overlap} mm, Adhesive: {adhesive_name}, Thickness: {film_thickness} mm, Cores: {cores}")
+        
+        # Get the corresponding material object
+        adhesive_object = get_adhesive_object(adhesive_name)
+        
+        # Call the StrapJoint function
+        StrapJoint(
+            overlap=overlap, 
+            adhesive=adhesive_object, 
+            film_thickness=film_thickness, 
+            cores=cores
+        )
+        
+        print("Job finished successfully")
+        return True
+        
+    except Exception as e:
+        print(f"An error occurred during simulation: {e}")
+        return False
+
 def main():
+    # Check if running in single point mode (via command line arguments)
+    if len(sys.argv) > 1 and sys.argv[1] == '--single':
+        if len(sys.argv) != 6:
+            print("Usage for single point: python run_simulations.py --single overlap adhesive film_thickness cores")
+            return
+        
+        try:
+            overlap = float(sys.argv[2])
+            adhesive_name = sys.argv[3]
+            film_thickness = float(sys.argv[4])
+            cores = int(sys.argv[5])
+            run_single_point(overlap, adhesive_name, film_thickness, cores)
+            return
+        except ValueError as e:
+            print(f"Error in parameter conversion: {e}")
+            return
     
-    # Path to the CSV is constructed using the reliable project_root
+    # Regular CSV mode
     params_file = os.path.join(project_root, 'inputs', 'sim_params.csv')
     
     if not os.path.exists(params_file):

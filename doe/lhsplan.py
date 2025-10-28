@@ -74,9 +74,34 @@ output_df = pd.DataFrame({
 })
 
 # Export to CSV
-output_path = 'abaqus-strapjoint-sim/inputs'
-output_filename = os.path.join(output_path, 'sim_params.csv')
+# Try to find the correct inputs directory
+script_dir = Path(__file__).parent.resolve()
+possible_input_paths = [
+    script_dir.parent / 'abaqus-strapjoint-sim' / 'inputs',  # ../abaqus-strapjoint-sim/inputs
+    Path.cwd() / 'abaqus-strapjoint-sim' / 'inputs',         # ./abaqus-strapjoint-sim/inputs
+    Path.cwd().parent / 'abaqus-strapjoint-sim' / 'inputs'   # ../abaqus-strapjoint-sim/inputs from working directory
+]
 
+input_dir = None
+for path in possible_input_paths:
+    if path.is_dir():
+        input_dir = path
+        break
+    elif not path.exists():
+        try:
+            path.mkdir(parents=True, exist_ok=True)
+            input_dir = path
+            break
+        except Exception as e:
+            continue
+
+if input_dir is None:
+    print("Error: Could not find or create inputs directory. Tried the following locations:")
+    for path in possible_input_paths:
+        print(f"- {path}")
+    sys.exit(1)
+
+output_filename = str(input_dir / 'sim_params.csv')
 output_df.to_csv(output_filename, index=False)
 print(f"\nExported to {output_filename} with the following format:")
 print(output_df)

@@ -112,7 +112,7 @@ def update_results_csv(overlap, thickness, rf1_value, region_name, results_file=
         'Overlap_mm': [round(float(overlap), 4)],
         'Adhesive_Thickness_mm': [round(float(thickness), 4)],
         'Adhesive': [ADHESIVE_TYPE],
-        'Max_RF1': [round(float(rf1_value), 4)],
+        'Max_RF1': [rf1_value],
         'Region': [region_name]
     })
     

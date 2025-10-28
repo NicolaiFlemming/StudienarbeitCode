@@ -3,9 +3,15 @@ import pandas as pd
 # You will need to install pyDOE if you don't have it (pip install pyDOE)
 from pyDOE3 import lhs 
 import os 
+import configparser
 
-Cores = 28
-Adhesive = 'DP490'  # 'AF163' or 'DP490'
+# Read configuration
+config = configparser.ConfigParser()
+config.read('../config.ini')
+
+# Get values from config
+Cores = config.getint('simulation', 'cpu_cores')
+Adhesive = config.get('simulation', 'adhesive_type')
 
 # Define the number of factors (d) and the number of samples (n)
 d = 2  # Number of factors (Overlap, Film_thickness)

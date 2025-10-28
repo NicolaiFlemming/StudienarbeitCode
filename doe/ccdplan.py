@@ -2,9 +2,15 @@ from pyDOE3 import ccdesign
 import numpy as np
 import pandas as pd
 import os
+import configparser
 
-Cores = 28
-Adhesive = 'AF163'  # 'AF163' or 'DP490'
+# Read configuration
+config = configparser.ConfigParser()
+config.read('../config.ini')
+
+# Get values from config
+Cores = config.getint('simulation', 'cpu_cores')
+Adhesive = config.get('simulation', 'adhesive_type')
 
 #create a central composite design with 2 factors and 2 center points, one for the factorial points and one for the axial points
 design = ccdesign(2, center=(1, 1), face='ccc')

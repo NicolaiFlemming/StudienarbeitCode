@@ -6,12 +6,23 @@ import time
 import subprocess
 import tkinter as tk
 from tkinter import filedialog
+import configparser
 from krg_training import train_and_predict_kriging
 
+# Read configuration
+config = configparser.ConfigParser()
+config_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'config.ini')
+
+if not os.path.exists(config_path):
+    print(f"Error: Configuration file not found at {config_path}")
+    sys.exit(1)
+
+config.read(config_path)
+
 # Configuration parameters
-ADHESIVE_TYPE = 'DP490'  # Options: 'DP490' or 'AF163'
-CPU_CORES = 28
-N_ITERATIONS = 5  # Number of optimization iterations
+ADHESIVE_TYPE = config.get('simulation', 'adhesive_type')
+CPU_CORES = config.getint('simulation', 'cpu_cores')
+N_ITERATIONS = config.getint('optimization', 'n_iterations')
 
 def select_results_file():
     """Open a file dialog to select the results CSV file."""

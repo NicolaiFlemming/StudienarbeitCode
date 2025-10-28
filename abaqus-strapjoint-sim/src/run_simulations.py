@@ -35,14 +35,8 @@ if script_dir not in sys.path:
     sys.path.append(script_dir)
 
 # ----------------------------------------------------------------------
-# MODULE IMPORTS AND CONFIGURATION
+# MODULE IMPORTS
 # ----------------------------------------------------------------------
-
-import configparser
-
-# Read configuration
-config = configparser.ConfigParser()
-config_path = os.path.join(project_root, '..', 'config.ini')
 
 try:
     # This import should now work because the 'src' directory is explicitly in sys.path
@@ -117,11 +111,6 @@ def run_single_point(overlap, adhesive_name, film_thickness, cores):
         return False
 
 def main():
-    # Load default values from config
-    default_cores = 28  # fallback default
-    if os.path.exists(config_path):
-        config.read(config_path)
-        default_cores = config.getint('simulation', 'cpu_cores', fallback=default_cores)
 
     # Extract the --single argument position
     try:

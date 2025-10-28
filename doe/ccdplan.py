@@ -3,10 +3,32 @@ import numpy as np
 import pandas as pd
 import os
 import configparser
+import sys
+from pathlib import Path
 
 # Read configuration
 config = configparser.ConfigParser()
-config.read('../config.ini')
+
+# Try different possible locations for config.ini
+script_dir = Path(__file__).parent.resolve()
+possible_config_paths = [
+    script_dir.parent / 'config.ini',  # ../config.ini
+    Path.cwd() / 'config.ini',         # ./config.ini
+    Path.cwd().parent / 'config.ini'   # ../config.ini from working directory
+]
+
+config_found = False
+for config_path in possible_config_paths:
+    if config_path.is_file():
+        config.read(str(config_path))
+        config_found = True
+        break
+
+if not config_found:
+    print("Error: config.ini not found. Tried the following locations:")
+    for path in possible_config_paths:
+        print(f"- {path}")
+    sys.exit(1)
 
 # Get values from config
 Cores = config.getint('simulation', 'cpu_cores')

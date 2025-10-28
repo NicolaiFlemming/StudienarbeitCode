@@ -166,7 +166,7 @@ This will generate:
 
 - Start with a small number of samples to test the workflow
 - Monitor disk space - simulation files can be large
-- Use LHS for initial exploration, CCD for response surface fitting
+- Use LHS for Kriging surrogate models, CCD for response surface fitting
 - Verify RSM models with `rsm_verification.py` before using predictions
 - Kriging optimization iteratively adds points where uncertainty is highest
 

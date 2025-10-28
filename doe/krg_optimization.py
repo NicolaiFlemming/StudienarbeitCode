@@ -36,10 +36,10 @@ def format_thickness_for_filename(thickness_mm):
     return int(thickness_mm * 1000)
 
 def format_overlap_for_filename(overlap_mm):
-    """Convert overlap value to filename format (e.g., 30.0 -> 30p0)."""
-    # Round to 4 decimal places before converting to string
+    """Convert overlap value to filename format with 4 decimal places."""
+    # Round to 4 decimal places and keep all 4 decimals in filename
     rounded = round(float(overlap_mm), 4)
-    return f"{rounded:.2f}".replace(".", "p")
+    return f"{rounded:.4f}".replace(".", "p")
 
 def get_rf1_from_odb(overlap_mm, thickness_mm):
     """Extract RF1 value and region from an ODB file using abaqus python."""

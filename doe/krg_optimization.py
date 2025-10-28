@@ -109,10 +109,10 @@ def update_results_csv(overlap, thickness, rf1_value, region_name, results_file=
     
     new_result = pd.DataFrame({
         'ODB_File': [odb_filename],
-        'Overlap_mm': [overlap],
-        'Adhesive_Thickness_mm': [thickness],
+        'Overlap_mm': [round(float(overlap), 4)],
+        'Adhesive_Thickness_mm': [round(float(thickness), 4)],
         'Adhesive': [ADHESIVE_TYPE],
-        'Max_RF1': [rf1_value],
+        'Max_RF1': [round(float(rf1_value), 4)],
         'Region': [region_name]
     })
     
@@ -130,9 +130,9 @@ def update_results_csv(overlap, thickness, rf1_value, region_name, results_file=
 def add_point_to_sim_params(overlap, adhesive_thickness):
     """Add a new point to the simulation parameters CSV file."""
     new_point = pd.DataFrame({
-        'Overlap': [overlap],
+        'Overlap': [round(float(overlap), 4)],
         'Adhesive': [ADHESIVE_TYPE],
-        'Film_thickness': [adhesive_thickness],
+        'Film_thickness': [round(float(adhesive_thickness), 4)],
         'Cores': [CPU_CORES]
     })
     

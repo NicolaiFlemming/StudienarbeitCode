@@ -3,32 +3,30 @@ import os
 import sys
 
 # ----------------------------------------------------------------------
-# ROBUST PATH DETERMINATION (Fixes NameError: name '__file__' is not defined)
+# ROBUST PATH DETERMINATION
 # ----------------------------------------------------------------------
 
-# 1. Define the name of your project directory for reliable anchoring.
-# Replace 'abaqus-strapjoint-sim' with your actual root folder name if different!
-PROJECT_ROOT_NAME = 'abaqus-strapjoint-sim' 
+def find_project_root():
+    """Find the project root directory from the current working directory."""
+    # Start with the current working directory
+    current_dir = os.path.abspath(os.getcwd())
+    
+    # Try to find 'abaqus-strapjoint-sim' in the path
+    while True:
+        # Check if we're in the project root
+        if os.path.basename(current_dir) == 'abaqus-strapjoint-sim':
+            return current_dir
+        
+        # Check if we've reached the root of the filesystem
+        parent = os.path.dirname(current_dir)
+        if parent == current_dir:
+            # If we haven't found it, return the directory containing run_simulations.py
+            return os.path.abspath(os.path.join(os.getcwd(), '..'))
+        
+        current_dir = parent
 
-# 2. Search sys.path to find the absolute path to your Project Root
-project_root = None
-for p in sys.path:
-    # Check if the path contains the project root name
-    if PROJECT_ROOT_NAME in os.path.basename(os.path.normpath(p)):
-        project_root = os.path.abspath(p)
-        break
-
-# 3. Fallback logic (Less reliable, but ensures project_root is set)
-if project_root is None:
-    # If the specific name wasn't found, try the directory containing the executed script (sys.path[0])
-    try:
-        script_dir = os.path.abspath(sys.path[0])
-        project_root = os.path.abspath(os.path.join(script_dir, '..'))
-    except IndexError:
-        project_root = os.path.abspath(os.getcwd())
-
-
-# 4. Define the source directory path and add it to sys.path
+# Find project root and set up paths
+project_root = find_project_root()
 script_dir = os.path.join(project_root, 'src')
 
 if script_dir not in sys.path:
@@ -111,7 +109,9 @@ def run_single_point(overlap, adhesive_name, film_thickness, cores):
         return False
 
 def main():
-
+    # Get the project root using our robust function
+    project_root = find_project_root()
+    
     # Extract the --single argument position
     try:
         single_index = sys.argv.index('--single')
@@ -143,10 +143,6 @@ def main():
         except ValueError as e:
             print(f"Error in parameter conversion: {e}")
             sys.exit(1)
-            
-    # Regular CSV mode
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    project_root = os.path.abspath(os.path.join(script_dir, '..'))
     params_file = os.path.join(project_root, 'inputs', 'sim_params.csv')
     
     if not os.path.exists(params_file):

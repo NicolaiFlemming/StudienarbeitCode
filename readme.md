@@ -9,10 +9,12 @@ StudienarbeitCode/
 ├── abaqus-strapjoint-sim/    # FEM simulation framework
 │   ├── inputs/               # Simulation parameters and inputs
 │   └── src/                  # Abaqus Python scripts
-├── doe/                      # Design of Experiments and Analysis
+├── doe/                      # Design of Experiments
 │   ├── ccdplan.py           # Central Composite Design generator
-│   ├── lhsplan.py           # Latin Hypercube Sampling generator
+│   └── lhsplan.py           # Latin Hypercube Sampling generator
+├── modeling/                 # Surrogate modeling and analysis
 │   ├── extract_values.py    # Extract results from ODB files
+│   ├── extract_rf1_single.py # Extract RF1 from single ODB file
 │   ├── krg_training.py      # Kriging model training and plots
 │   ├── krg_optimization.py  # Kriging-based optimization
 │   ├── rsm_mapping.py       # Response Surface Methodology mapping
@@ -88,30 +90,31 @@ abaqus cae noGui=src/run_simulations.py
 Extract results from ODB files:
 
 ```sh
-python doe/extract_values.py
+python modeling/extract_values.py
 ```
 
 Select the ODB files and specify output location when prompted.
 
 ### 5. Surrogate Modeling
 
-#### For Response Surface Models (RSM):
+#### For Response Surface Models (RSM)
 Continue with the RSM mapping script:
 
 ```sh
-python doe/rsm_mapping.py
+python modeling/rsm_mapping.py
 ```
 
 This will generate:
+
 - 2D contour plots
 - 3D surface plots with contours
 - RSM model equations and statistics
 
-#### For Kriging Models (KRG):
+#### For Kriging Models (KRG)
 a. Run optimization to identify optimal sampling points:
 
 ```sh
-python doe/krg_optimization.py
+python modeling/krg_optimization.py
 ```
 
 This performs iterative optimization to find points with maximum uncertainty.
@@ -119,10 +122,11 @@ This performs iterative optimization to find points with maximum uncertainty.
 b. After optimization, generate plots:
 
 ```sh
-python doe/krg_training.py
+python modeling/krg_training.py
 ```
 
 This will generate:
+
 - Response surface predictions
 - Uncertainty maps
 - Validation plots

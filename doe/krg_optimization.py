@@ -169,8 +169,8 @@ def run_optimization_loop(n_iterations=5, results_file='results.csv'):
         overlap, adhesive_thickness, std_dev = max_uncertainty_point
         
         print(f"Point of highest uncertainty found:")
-        print(f"Overlap: {overlap:.2f} mm")
-        print(f"Adhesive Thickness: {adhesive_thickness:.2f} mm")
+        print(f"Overlap: {overlap:.4f} mm")
+        print(f"Adhesive Thickness: {adhesive_thickness:.3f} mm")
         print(f"Standard Deviation: {std_dev:.2f}")
         
         # Get the absolute paths

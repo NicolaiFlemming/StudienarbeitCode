@@ -7,6 +7,7 @@ import subprocess
 import tkinter as tk
 from tkinter import filedialog
 import configparser
+import matplotlib.pyplot as plt
 from krg_training import train_and_predict_kriging
 
 # Read configuration
@@ -167,6 +168,9 @@ def run_optimization_loop(n_iterations=5, results_file='results.csv'):
     print(f"Number of iterations: {n_iterations}")
     print("-" * 50)
     
+    # Track optimization history
+    iteration_history = []
+    
     for iteration in range(n_iterations):
         print(f"\nStarting iteration {iteration + 1}/{n_iterations}")
         
@@ -178,6 +182,14 @@ def run_optimization_loop(n_iterations=5, results_file='results.csv'):
             break
             
         overlap, adhesive_thickness, std_dev = max_uncertainty_point
+        
+        # Store iteration data
+        iteration_data = {
+            'iteration': iteration + 1,
+            'overlap': overlap,
+            'adhesive_thickness': adhesive_thickness,
+            'std_dev': std_dev
+        }
         
         print(f"Point of highest uncertainty found:")
         print(f"Overlap: {overlap:.4f} mm")
@@ -218,7 +230,7 @@ def run_optimization_loop(n_iterations=5, results_file='results.csv'):
             
             if result.returncode != 0:
                 print("Error: Abaqus simulation failed")
-                return
+                return iteration_history
                 
             # Give a small buffer for file system operations
             time.sleep(2)
@@ -227,7 +239,7 @@ def run_optimization_loop(n_iterations=5, results_file='results.csv'):
             odb_name = f"{job_name}.odb"
             if not os.path.exists(odb_name):
                 print(f"Error: Expected ODB file {odb_name} not found after simulation")
-                return
+                return iteration_history
                 
             print("Simulation completed successfully.")
             
@@ -241,17 +253,82 @@ def run_optimization_loop(n_iterations=5, results_file='results.csv'):
                 update_results_csv(overlap, adhesive_thickness, rf1_value, region_name, results_file)
                 print(f"Results updated: RF1 = {rf1_value:.2f}")
                 
+                # Store RF1 in iteration data
+                iteration_data['rf1_value'] = rf1_value
+                
                 # 5. Add point to sim_params.csv for record keeping
                 add_point_to_sim_params(overlap, adhesive_thickness)
             else:
                 print("Failed to extract results from ODB file. Skipping this iteration.")
+                iteration_data['rf1_value'] = None
                 
         finally:
             # Always return to original directory
             os.chdir(original_dir)
         
+        # Add to history
+        iteration_history.append(iteration_data)
+        
         print(f"Iteration {iteration + 1} complete.\n")
         print("-" * 50)
+    
+    return iteration_history
+
+def plot_optimization_history(iteration_history):
+    """Plot the optimization history showing uncertainty reduction."""
+    if not iteration_history:
+        print("No optimization history to plot.")
+        return
+    
+    # Convert to DataFrame for easier plotting
+    df = pd.DataFrame(iteration_history)
+    
+    # Save iteration history to CSV
+    csv_filename = 'krg_optimization_history.csv'
+    df.to_csv(csv_filename, index=False)
+    print(f"\nOptimization history data saved to: {csv_filename}")
+    
+    # Create single plot for standard deviation
+    fig, ax = plt.subplots(figsize=(10, 6))
+    
+    ax.plot(df['iteration'], df['std_dev'], 'o-', linewidth=2.5, markersize=10, 
+            color='#e74c3c', markeredgecolor='black', markeredgewidth=1.5)
+    ax.set_xlabel('Iteration', fontsize=13, fontweight='bold')
+    ax.set_ylabel('Standard Deviation (Uncertainty)', fontsize=13, fontweight='bold')
+    ax.set_title('Kriging Optimization: Maximum Uncertainty per Iteration', 
+                 fontsize=14, fontweight='bold', pad=20)
+    ax.grid(True, alpha=0.3, linestyle='--')
+    ax.set_xticks(df['iteration'])
+    
+    # Add value labels on points
+    for idx, row in df.iterrows():
+        ax.annotate(f'{row["std_dev"]:.1f}', 
+                   (row['iteration'], row['std_dev']),
+                   textcoords="offset points", 
+                   xytext=(0, 10), 
+                   ha='center',
+                   fontsize=9,
+                   fontweight='bold')
+    
+    plt.tight_layout()
+    
+    # Save plot
+    plot_filename = 'krg_optimization_history.png'
+    plt.savefig(plot_filename, dpi=300, bbox_inches='tight')
+    print(f"Optimization history plot saved to: {plot_filename}")
+    
+    # Show plot
+    plt.show()
+    
+    # Print summary statistics
+    print("\n" + "=" * 50)
+    print("OPTIMIZATION SUMMARY")
+    print("=" * 50)
+    print(f"Total iterations completed: {len(df)}")
+    print(f"Initial max uncertainty: {df['std_dev'].iloc[0]:.2f}")
+    print(f"Final max uncertainty: {df['std_dev'].iloc[-1]:.2f}")
+    print(f"Uncertainty reduction: {((df['std_dev'].iloc[0] - df['std_dev'].iloc[-1]) / df['std_dev'].iloc[0] * 100):.1f}%")
+    print("=" * 50)
 
 if __name__ == '__main__':
     print("Starting Kriging model optimization loop")
@@ -267,4 +344,9 @@ if __name__ == '__main__':
     print(f"Selected results file: {RESULTS_FILE}")
     print("-" * 50)
     
-    run_optimization_loop(N_ITERATIONS, RESULTS_FILE)
+    # Run optimization
+    history = run_optimization_loop(N_ITERATIONS, RESULTS_FILE)
+    
+    # Plot results
+    if history:
+        plot_optimization_history(history)

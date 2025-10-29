@@ -1,9 +1,9 @@
-from odbAccess import openOdb
 import csv
 import re
 import tkinter as tk
 from tkinter import filedialog
 import os
+import subprocess
 
 # === Step 1: Select ODB files ===
 root = tk.Tk()
@@ -31,6 +31,14 @@ if not csv_path:
 # Example: SAP66p21_220mu_DP490.odb
 pattern = re.compile(r"SAP(\d+p\d+)_([0-9]+)mu_([A-Za-z0-9]+)\.odb", re.IGNORECASE)
 
+# Get path to extract_rf1_single.py script
+script_dir = os.path.dirname(os.path.abspath(__file__))
+extract_script = os.path.join(script_dir, 'extract_rf1_single.py')
+
+if not os.path.exists(extract_script):
+    print(f"Error: extract_rf1_single.py not found at {extract_script}")
+    exit()
+
 # === Step 4: Process each ODB ===
 with open(csv_path, 'w', newline='') as csvfile:
     writer = csv.writer(csvfile)
@@ -51,39 +59,47 @@ with open(csv_path, 'w', newline='') as csvfile:
             overlap, thickness, adhesive = None, None, None
             print(f" Could not parse info from {odb_name}")
 
-        # --- Open odb ---
-        try:
-            odb = openOdb(odb_path)
-        except Exception as e:
-            print(f" Error opening {odb_name}: {e}")
-            continue
-
+        # --- Extract RF1 using extract_rf1_single.py ---
         rf1_max = None
         region_found = None
-
+        
         try:
-            step = odb.steps['Step-1']
-
-            # Search all regions for RF1
-            for region_name, region in step.historyRegions.items():
-                if 'RF1' in region.historyOutputs.keys():
-                    rf1_data = region.historyOutputs['RF1'].data
-                    rf1_local_max = max(v[1] for v in rf1_data)
-                    if rf1_max is None or rf1_local_max > rf1_max:
-                        rf1_max = rf1_local_max
-                        region_found = region_name
-
-            if rf1_max is None:
-                print(f" No RF1 found in {odb_name}. Regions:")
-                for rn in step.historyRegions.keys():
-                    print("   ", rn)
-                print("----")
-
+            # Call extract_rf1_single.py with abaqus python
+            cmd = f'abaqus python "{extract_script}" "{odb_path}"'
+            result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=300)
+            
+            if result.returncode != 0:
+                print(f" Error running extraction: {result.stderr}")
+            else:
+                # Read the result file
+                result_file = 'rf1_result.txt'
+                if os.path.exists(result_file):
+                    with open(result_file, 'r') as f:
+                        lines = f.readlines()
+                        if len(lines) >= 2 and lines[0].strip():
+                            try:
+                                rf1_max = float(lines[0].strip())
+                                region_found = lines[1].strip()
+                                print(f" Found RF1: {rf1_max:.2f} in region {region_found}")
+                            except ValueError:
+                                print(f" Could not parse RF1 value from result file")
+                        else:
+                            print(f" No RF1 found in {odb_name}")
+                    
+                    # Clean up result file
+                    try:
+                        os.remove(result_file)
+                    except Exception:
+                        pass
+                else:
+                    print(f" Result file not created")
+                    
+        except subprocess.TimeoutExpired:
+            print(f" Timeout processing {odb_name}")
         except Exception as e:
-            print(f" Error extracting RF1 from {odb_name}: {e}")
-        finally:
-            odb.close()
+            print(f" Error processing {odb_name}: {e}")
 
         writer.writerow([odb_name, overlap, thickness, adhesive, rf1_max, region_found])
 
-print(f"\n Done! Results saved to: {csv_path}")
+print(f"\nDone! Results saved to: {csv_path}")
+

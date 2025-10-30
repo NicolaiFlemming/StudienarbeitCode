@@ -297,7 +297,8 @@ def plot_optimization_history(iteration_history):
     # Save iteration history to CSV
     csv_filename = 'krg_optimization_history.csv'
     df.to_csv(csv_filename, index=False)
-    print(f"\nOptimization history data saved to: {csv_filename}")
+    csv_full_path = os.path.abspath(csv_filename)
+    print(f"\nOptimization history data saved to: {csv_full_path}")
     
     # Create single plot for standard deviation
     fig, ax = plt.subplots(figsize=(10, 6))
@@ -326,7 +327,8 @@ def plot_optimization_history(iteration_history):
     # Save plot
     plot_filename = 'krg_optimization_history.png'
     plt.savefig(plot_filename, dpi=300, bbox_inches='tight')
-    print(f"Optimization history plot saved to: {plot_filename}")
+    plot_full_path = os.path.abspath(plot_filename)
+    print(f"Optimization history plot saved to: {plot_full_path}")
     
     # Show plot
     plt.show()
@@ -358,6 +360,17 @@ if __name__ == '__main__':
     # Run optimization
     history = run_optimization_loop(N_ITERATIONS, RESULTS_FILE)
     
-    # Plot results
+    # Save results immediately after optimization
     if history:
+        # Save to CSV
+        df_history = pd.DataFrame(history)
+        csv_filename = 'krg_optimization_history.csv'
+        df_history.to_csv(csv_filename, index=False)
+        print(f"\n{'='*50}")
+        print(f"Optimization history saved to: {csv_filename}")
+        print(f"{'='*50}")
+        
+        # Plot results
         plot_optimization_history(history)
+    else:
+        print("\nNo optimization history to save.")

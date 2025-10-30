@@ -158,6 +158,17 @@ def train_and_predict_kriging(file_path=None, show_plots=False):
     gp = initialize_model()
     gp.fit(X_train_scaled, Y_train_scaled)
     
+    # Extract hyperparameters after optimization
+    optimized_kernel = gp.kernel_
+    hyperparameters = {
+        'constant_value': optimized_kernel.k1.constant_value,
+        'length_scale_overlap': optimized_kernel.k2.length_scale[0],
+        'length_scale_thickness': optimized_kernel.k2.length_scale[1],
+        'nu': optimized_kernel.k2.nu,
+        'alpha': gp.alpha,
+        'log_marginal_likelihood': gp.log_marginal_likelihood_value_
+    }
+    
     # Create prediction grid
     X_test, xx1, xx2 = create_prediction_grid()
     X_test_scaled = x_scaler.transform(X_test)
@@ -186,7 +197,7 @@ def train_and_predict_kriging(file_path=None, show_plots=False):
     if show_plots:
         create_plots(xx1, xx2, X_train, Y_train, Y_pred_mean_grid, Y_pred_std_grid)
     
-    return max_std_x1, max_std_x2, max_std_value
+    return max_std_x1, max_std_x2, max_std_value, hyperparameters
 
 if __name__ == '__main__':
     train_and_predict_kriging(show_plots=True)

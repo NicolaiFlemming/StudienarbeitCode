@@ -175,26 +175,37 @@ def run_optimization_loop(n_iterations=5, results_file='results.csv'):
         print(f"\nStarting iteration {iteration + 1}/{n_iterations}")
         
         # 1. Train Kriging model and get point of highest uncertainty
-        max_uncertainty_point = train_and_predict_kriging(results_file, show_plots=False)
+        result = train_and_predict_kriging(results_file, show_plots=False)
         
-        if max_uncertainty_point is None:
+        if result is None:
             print("Error in Kriging model training. Stopping optimization loop.")
             break
             
-        overlap, adhesive_thickness, std_dev = max_uncertainty_point
+        overlap, adhesive_thickness, std_dev, hyperparameters = result
         
-        # Store iteration data
+        # Store iteration data including hyperparameters
         iteration_data = {
             'iteration': iteration + 1,
             'overlap': overlap,
             'adhesive_thickness': adhesive_thickness,
-            'std_dev': std_dev
+            'std_dev': std_dev,
+            'kernel_constant': hyperparameters['constant_value'],
+            'length_scale_overlap': hyperparameters['length_scale_overlap'],
+            'length_scale_thickness': hyperparameters['length_scale_thickness'],
+            'nu': hyperparameters['nu'],
+            'alpha': hyperparameters['alpha'],
+            'log_marginal_likelihood': hyperparameters['log_marginal_likelihood']
         }
         
         print(f"Point of highest uncertainty found:")
         print(f"Overlap: {overlap:.4f} mm")
         print(f"Adhesive Thickness: {adhesive_thickness:.3f} mm")
         print(f"Standard Deviation: {std_dev:.2f}")
+        print(f"\nOptimized Hyperparameters:")
+        print(f"  Kernel Constant: {hyperparameters['constant_value']:.4f}")
+        print(f"  Length Scale (Overlap): {hyperparameters['length_scale_overlap']:.4f}")
+        print(f"  Length Scale (Thickness): {hyperparameters['length_scale_thickness']:.4f}")
+        print(f"  Log Marginal Likelihood: {hyperparameters['log_marginal_likelihood']:.2f}")
         
         # Get the absolute paths
         script_dir = os.path.dirname(os.path.abspath(__file__))

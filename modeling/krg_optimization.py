@@ -294,11 +294,15 @@ def plot_optimization_history(iteration_history):
     # Convert to DataFrame for easier plotting
     df = pd.DataFrame(iteration_history)
     
-    # Save iteration history to CSV
-    csv_filename = 'krg_optimization_history.csv'
+    # Get script directory and create output directory
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    output_dir = os.path.join(script_dir, 'output')
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # Save iteration history to CSV in output directory
+    csv_filename = os.path.join(output_dir, 'krg_optimization_history.csv')
     df.to_csv(csv_filename, index=False)
-    csv_full_path = os.path.abspath(csv_filename)
-    print(f"\nOptimization history data saved to: {csv_full_path}")
+    print(f"\nOptimization history data saved to: {csv_filename}")
     
     # Create single plot for standard deviation
     fig, ax = plt.subplots(figsize=(10, 6))
@@ -324,11 +328,10 @@ def plot_optimization_history(iteration_history):
     
     plt.tight_layout()
     
-    # Save plot
-    plot_filename = 'krg_optimization_history.png'
+    # Save plot in output directory
+    plot_filename = os.path.join(output_dir, 'krg_optimization_history.png')
     plt.savefig(plot_filename, dpi=300, bbox_inches='tight')
-    plot_full_path = os.path.abspath(plot_filename)
-    print(f"Optimization history plot saved to: {plot_full_path}")
+    print(f"Optimization history plot saved to: {plot_filename}")
     
     # Show plot
     plt.show()
@@ -362,9 +365,14 @@ if __name__ == '__main__':
     
     # Save results immediately after optimization
     if history:
-        # Save to CSV
+        # Create output directory if it doesn't exist
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        output_dir = os.path.join(script_dir, 'output')
+        os.makedirs(output_dir, exist_ok=True)
+        
+        # Save to CSV in the output directory
         df_history = pd.DataFrame(history)
-        csv_filename = 'krg_optimization_history.csv'
+        csv_filename = os.path.join(output_dir, 'krg_optimization_history.csv')
         df_history.to_csv(csv_filename, index=False)
         print(f"\n{'='*50}")
         print(f"Optimization history saved to: {csv_filename}")

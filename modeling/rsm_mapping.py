@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import statsmodels.formula.api as smf
 import numpy as np
@@ -85,6 +86,11 @@ pred_df_coded = pd.DataFrame({
 # Predict the response (Max_RF1)
 Y_pred = rsm_fit_coded.predict(pred_df_coded).values.reshape(X1_grid_u.shape)
 
+# Create output directory if it doesn't exist
+script_dir = os.path.dirname(os.path.abspath(__file__))
+output_dir = os.path.join(script_dir, 'output')
+os.makedirs(output_dir, exist_ok=True)
+
 # =====================================================================
 # 5. Generate 2D Contour Plot
 # =====================================================================
@@ -96,7 +102,7 @@ plt.xlabel('Overlap (mm)')
 plt.ylabel('Adhesive Thickness (mm)')
 plt.title('2D Response Surface Contour Plot (Coded Model)')
 plt.legend()
-plt.savefig('rsm_2d_contour_plot.svg')
+plt.savefig(os.path.join(output_dir, 'rsm_2d_contour_plot.svg'))
 plt.close() # Close plot figure
 
 # =====================================================================
@@ -131,5 +137,6 @@ ax.set_title('3D Response Surface Plot with Base Contour (Coded Model)')
 fig.colorbar(surf, ax=ax, shrink=0.5, aspect=5, label='Predicted Max_RF1 (N)')
 
 ax.legend()
-plt.savefig('rsm_3d_surface_with_contour.svg')
+plt.savefig(os.path.join(output_dir, 'rsm_3d_surface_with_contour.svg'))
+print(f"\nPlots saved to: {output_dir}")
 plt.show()

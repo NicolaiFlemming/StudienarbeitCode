@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -82,6 +83,11 @@ def create_prediction_grid():
 
 def create_plots(xx1, xx2, X_train, Y_train, Y_pred_mean_grid, Y_pred_std_grid):
     """Create and save all visualization plots."""
+    # Create output directory if it doesn't exist
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    output_dir = os.path.join(script_dir, 'output')
+    os.makedirs(output_dir, exist_ok=True)
+    
     # Plot 1: Mean Prediction
     fig1 = plt.figure(figsize=(10, 8))
     ax1 = fig1.add_subplot(111)
@@ -94,7 +100,7 @@ def create_plots(xx1, xx2, X_train, Y_train, Y_pred_mean_grid, Y_pred_std_grid):
     ax1.legend(loc='upper left')
     ax1.axis('tight')
     plt.tight_layout()
-    plt.savefig('kriging_2d_prediction.svg')
+    plt.savefig(os.path.join(output_dir, 'kriging_2d_prediction.svg'))
     plt.close()
     
     # Plot 2: Uncertainty
@@ -109,7 +115,7 @@ def create_plots(xx1, xx2, X_train, Y_train, Y_pred_mean_grid, Y_pred_std_grid):
     ax2.legend(loc='upper left')
     ax2.axis('tight')
     plt.tight_layout()
-    plt.savefig('kriging_uncertainty.svg')
+    plt.savefig(os.path.join(output_dir, 'kriging_uncertainty.svg'))
     plt.close()
     
     # Plot 3: 3D Surface
@@ -142,10 +148,12 @@ def create_plots(xx1, xx2, X_train, Y_train, Y_pred_mean_grid, Y_pred_std_grid):
 
     fig3.colorbar(surf, shrink=0.5, aspect=5, label='Predicted Max_RF1')
     plt.tight_layout()
-    plt.savefig('kriging_3d_surface.svg')
+    plt.savefig(os.path.join(output_dir, 'kriging_3d_surface.svg'))
     if plt.get_fignums():
         plt.show()
     plt.close()
+    
+    print(f"\nPlots saved to: {output_dir}")
 
 def train_and_predict_kriging(file_path=None, show_plots=False):
     """Train the Kriging model and return the point of highest uncertainty."""

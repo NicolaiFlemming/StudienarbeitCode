@@ -41,9 +41,9 @@ AF163 = AdhesiveMaterial(
 )
 
 
-def SteppedJoint(stepratio, adhesive, film_thickness, cores, L=150.0, B=25.0, th=2.0, pl=8, num_steps=4, orientation_values= [-45.0, 0.0, 45.0, 90.0, 90.0, 45.0, 0.0, -45.0]):
+def SteppedJoint(overlap, adhesive, film_thickness, cores, L=150.0, B=25.0, th=2.0, pl=8, num_steps=4, orientation_values= [-45.0, 0.0, 45.0, 90.0, 90.0, 45.0, 0.0, -45.0]):
 
-    stepratio_str = f"{stepratio}"
+    overlap_str = f"{overlap}"
     # Format film thickness
     if film_thickness < 1:
         film_thickness_str = f"{int(film_thickness * 1000)}mu"  # e.g., 0.12 -> 120mu
@@ -59,14 +59,14 @@ def SteppedJoint(stepratio, adhesive, film_thickness, cores, L=150.0, B=25.0, th
         adhesive_name = adhesive.__class__.__name__
     
     adhesive_name = adhesive_name.replace(" ", "_").replace(".", "_").replace(",", "_")
-    part_name = f"SEP{stepratio_str}_{film_thickness_str}_{adhesive_name}"
+    part_name = f"SEP{overlap_str}_{film_thickness_str}_{adhesive_name}"
 
     #Paramters
+    Overlap = overlap  #total overlap length
     pl_th = th / pl  #thickness of each ply
     HStep = th / (num_steps)  #height of each step
-    LStep = stepratio * HStep #length of each step
-    Overlap = LStep * (num_steps - 1)  #total overlap length
-    
+    LStep = overlap / (num_steps - 1)  #length of each step
+
     #create new empty model database
     Mdb()
 
@@ -493,4 +493,4 @@ def SteppedJoint(stepratio, adhesive, film_thickness, cores, L=150.0, B=25.0, th
 
     #mdb.saveAs(pathName=f"{part_name}.cae")
 
-SteppedJoint(stepratio=20, adhesive=DP490, film_thickness=0.1, cores=12, L=150.0, B=25.0, th=2.0, pl=8, num_steps=4, orientation_values= [-45.0, 0.0, 45.0, 90.0, 90.0, 45.0, 0.0, -45.0])
+SteppedJoint(overlap = 30, adhesive=DP490, film_thickness=0.1, cores=12, L=150.0, B=25.0, th=2.0, pl=8, num_steps=4, orientation_values= [-45.0, 0.0, 45.0, 90.0, 90.0, 45.0, 0.0, -45.0])

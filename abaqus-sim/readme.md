@@ -13,7 +13,7 @@ This project automates the setup and execution of strap joint simulations in Aba
 ## File Structure
 
 ```text
-abaqus-strapjoint-sim/
+abaqus-sim/
 ├── inputs/
 │   ├── sim_params.csv         # CSV file with simulation parameters
 │   └── sim_params_example.csv # Example parameter file for reference

@@ -56,7 +56,7 @@ def format_overlap_for_filename(overlap_mm):
 def get_rf1_from_odb(overlap_mm, thickness_mm):
     """Extract RF1 value and region from an ODB file using abaqus python."""
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    abaqus_dir = os.path.abspath(os.path.join(script_dir, '..', 'abaqus-strapjoint-sim', 'src'))
+    abaqus_dir = os.path.abspath(os.path.join(script_dir, '..', 'abaqus-sim', 'src'))
     
     # Format the filename components
     overlap_str = format_overlap_for_filename(overlap_mm)
@@ -150,7 +150,7 @@ def add_point_to_sim_params(overlap, adhesive_thickness):
     
     script_dir = os.path.dirname(os.path.abspath(__file__))
     sim_params_path = os.path.abspath(os.path.join(
-        script_dir, '..', 'abaqus-strapjoint-sim', 'inputs', 'sim_params.csv'
+        script_dir, '..', 'abaqus-sim', 'inputs', 'sim_params.csv'
     ))
     
     # Ensure directory exists
@@ -209,7 +209,7 @@ def run_optimization_loop(n_iterations=5, results_file='results.csv'):
         
         # Get the absolute paths
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        sim_dir = os.path.abspath(os.path.join(script_dir, '..', 'abaqus-strapjoint-sim', 'src'))
+        sim_dir = os.path.abspath(os.path.join(script_dir, '..', 'abaqus-sim', 'src'))
         
         # 2. Run the simulation for just this point
         print("\nRunning Abaqus simulation for optimized point...")

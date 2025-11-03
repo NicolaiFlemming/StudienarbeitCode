@@ -77,9 +77,9 @@ output_df = pd.DataFrame({
 # Try to find the correct inputs directory
 script_dir = Path(__file__).parent.resolve()
 possible_input_paths = [
-    script_dir.parent / 'abaqus-strapjoint-sim' / 'inputs',  # ../abaqus-strapjoint-sim/inputs
-    Path.cwd() / 'abaqus-strapjoint-sim' / 'inputs',         # ./abaqus-strapjoint-sim/inputs
-    Path.cwd().parent / 'abaqus-strapjoint-sim' / 'inputs'   # ../abaqus-strapjoint-sim/inputs from working directory
+    script_dir.parent / 'abaqus-sim' / 'inputs',  # ../abaqus-sim/inputs
+    Path.cwd() / 'abaqus-sim' / 'inputs',         # ./abaqus-sim/inputs
+    Path.cwd().parent / 'abaqus-sim' / 'inputs'   # ../abaqus-sim/inputs from working directory
 ]
 
 input_dir = None

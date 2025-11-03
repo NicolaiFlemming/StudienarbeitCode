@@ -6,7 +6,7 @@ This repository contains a comprehensive framework for analyzing Carbon Fiber Re
 
 ```text
 StudienarbeitCode/
-├── abaqus-strapjoint-sim/    # FEM simulation framework
+├── abaqus-sim/              # FEM simulation framework
 │   ├── inputs/               # Simulation parameters and inputs
 │   └── src/                  # Abaqus Python scripts
 ├── doe/                      # Design of Experiments
@@ -76,13 +76,13 @@ python doe/lhsplan.py  # Latin Hypercube Sampling
 python doe/ccdplan.py  # Central Composite Design
 ```
 
-This generates `abaqus-strapjoint-sim/inputs/sim_params.csv`
+This generates `abaqus-sim/inputs/sim_params.csv`
 
 ### 3. Run FEM Simulations
-Execute Abaqus simulations as described in `abaqus-strapjoint-sim/readme.md`:
+Execute Abaqus simulations as described in `abaqus-sim/readme.md`:
 
 ```sh
-cd abaqus-strapjoint-sim
+cd abaqus-sim
 abaqus cae noGui=src/run_simulations.py
 ```
 
@@ -158,7 +158,7 @@ This will generate:
 
 ## Documentation
 
-- See `abaqus-strapjoint-sim/readme.md` for detailed simulation setup and troubleshooting
+- See `abaqus-sim/readme.md` for detailed simulation setup and troubleshooting
 - Individual script files contain additional documentation
 - Check error messages and log files for debugging
 

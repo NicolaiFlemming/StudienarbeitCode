@@ -52,17 +52,56 @@ def read_config(project_root):
     return joint_type, cpu_cores, abaqus_cmd
 
 
+def convert_unc_to_drive(path_str):
+    """
+    Convert UNC path to mapped drive letter if possible.
+    Falls back to original path if no mapping found.
+    """
+    import subprocess as sp
+    
+    if not path_str.startswith('\\\\'):
+        return path_str  # Already a drive letter path
+    
+    try:
+        # Get all network drives using 'net use'
+        result = sp.run(['net', 'use'], capture_output=True, text=True, check=True)
+        
+        # Parse output to find mapped drives
+        for line in result.stdout.split('\n'):
+            if '\\\\' in line:
+                parts = line.split()
+                if len(parts) >= 3:
+                    # Format: Status    Local    Remote
+                    drive = parts[1] if ':' in parts[1] else None
+                    unc = parts[2] if '\\\\' in parts[2] else None
+                    
+                    if drive and unc and path_str.startswith(unc):
+                        # Replace UNC path with drive letter
+                        return path_str.replace(unc, drive)
+        
+        # No mapping found, return original
+        return path_str
+        
+    except Exception:
+        # If we can't query drives, return original path
+        return path_str
+
+
 def run_abaqus_simulation(overlap, adhesive, film_thickness, cores, joint_type, project_root, abaqus_cmd='abaqus'):
     """Run a single Abaqus simulation using subprocess."""
     
-    # Get full path to run_simulations.py
+    # Get full path to run_simulations.py and convert UNC to drive letter if needed
     run_script = project_root / 'src' / 'run_simulations.py'
     
-    # Construct the Abaqus command with full path
+    # Convert UNC paths to drive letters
+    run_script_str = convert_unc_to_drive(str(run_script))
+    project_root_str = convert_unc_to_drive(str(project_root))
+    
+    # Construct the Abaqus command with converted path
     cmd = [
         abaqus_cmd,
         'cae',
-        f'noGUI={run_script}',
+        f'noGUI={run_script_str}',
         '--',
         '--single',
         str(overlap),
@@ -73,13 +112,13 @@ def run_abaqus_simulation(overlap, adhesive, film_thickness, cores, joint_type, 
     ]
     
     print(f"\nRunning: {' '.join(cmd)}")
-    print(f"Working directory: {project_root}")
+    print(f"Working directory: {project_root_str}")
     
     try:
         # Run the command from the project root directory
         result = subprocess.run(
             cmd,
-            cwd=str(project_root),
+            cwd=project_root_str,
             capture_output=True,
             text=True,
             timeout=7200  # 2 hour timeout per simulation

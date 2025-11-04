@@ -509,10 +509,10 @@ def SteppedJoint(overlap, adhesive, film_thickness, cores, L=150.0, B=25.0, th=2
         resultsFormat=ODB, numDomains=cores, activateLoadBalancing=False, 
         numThreadsPerMpiProcess=1, numCpus=cores)
     
-    #job = mdb.jobs[part_name]
-    #job.submit()
-    #job.waitForCompletion()
+    job = mdb.jobs[part_name]
+    job.submit()
+    job.waitForCompletion()
 
-    #mdb.saveAs(pathName=f"{part_name}.cae")
+    mdb.saveAs(pathName=f"{part_name}.cae")
 
-SteppedJoint(overlap = 30, adhesive=DP490, film_thickness=0.1, cores=12, L=150.0, B=25.0, th=2.0, pl=8, num_steps=4, orientation_values= [-45.0, 0.0, 45.0, 90.0, 90.0, 45.0, 0.0, -45.0])
+#SteppedJoint(overlap = 30, adhesive=DP490, film_thickness=0.1, cores=12, L=150.0, B=25.0, th=2.0, pl=8, num_steps=4, orientation_values= [-45.0, 0.0, 45.0, 90.0, 90.0, 45.0, 0.0, -45.0])

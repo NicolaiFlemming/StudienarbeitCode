@@ -1,6 +1,7 @@
 import csv
 import os
 import sys
+import configparser
 
 # ----------------------------------------------------------------------
 # ROBUST PATH DETERMINATION
@@ -39,9 +40,10 @@ if script_dir not in sys.path:
 try:
     # This import should now work because the 'src' directory is explicitly in sys.path
     from StrapJoint import StrapJoint, DP490, AF163
+    from SteppedJoint import SteppedJoint
 except ImportError:
     # This fatal exit is a clean way to handle module import failure in Abaqus
-    print("FATAL ERROR: Could not import StrapJoint. Check file names and directory structure.")
+    print("FATAL ERROR: Could not import StrapJoint or SteppedJoint. Check file names and directory structure.")
     print(f"Attempted to add directory to sys.path: {script_dir}")
     print(f"Current sys.path entries: {sys.path}")
     sys.exit()
@@ -59,14 +61,45 @@ def get_adhesive_object(name):
     else:
         raise ValueError(f"Unknown adhesive name in CSV: {name}. Must be 'DP490' or 'AF163'.")
 
+def get_joint_function(joint_type):
+    """Maps the joint type string to the corresponding function."""
+    if joint_type == 'SAP':
+        return StrapJoint
+    elif joint_type == 'SEP':
+        return SteppedJoint
+    else:
+        raise ValueError(f"Unknown joint type: {joint_type}. Must be 'SAP' or 'SEP'.")
+
+def read_config():
+    """Read configuration from config.ini file."""
+    # Navigate up from src to project root to find config.ini
+    project_root = find_project_root()
+    # Go up one more level to find config.ini in the repo root
+    config_path = os.path.join(os.path.dirname(project_root), 'config.ini')
+    
+    config = configparser.ConfigParser()
+    
+    # Check if config file exists
+    if not os.path.exists(config_path):
+        print(f"Warning: config.ini not found at {config_path}. Using defaults.")
+        return 'SAP'  # Default to Strap Joint
+    
+    config.read(config_path)
+    
+    # Read joint type from config, default to SAP
+    joint_type = config.get('simulation', 'joint_type', fallback='SAP').strip()
+    
+    return joint_type
+
 # ----------------------------------------------------------------------
 # MAIN EXECUTION
 # ----------------------------------------------------------------------
 
-def run_single_point(overlap, adhesive_name, film_thickness, cores):
+def run_single_point(overlap, adhesive_name, film_thickness, cores, joint_type='SAP'):
     """Run simulation for a single point with given parameters."""
     try:
         print(f"Processing single point simulation:")
+        print(f"  Joint Type: {joint_type}")
         print(f"  Overlap: {overlap} mm")
         print(f"  Adhesive: {adhesive_name}")
         print(f"  Thickness: {film_thickness} mm")
@@ -78,25 +111,28 @@ def run_single_point(overlap, adhesive_name, film_thickness, cores):
         if adhesive_object is None:
             print(f"Error: Could not get adhesive object for {adhesive_name}")
             return False
-            
-        print("Starting StrapJoint simulation...")
         
-        # Call the StrapJoint function with explicit error handling
+        # Get the joint function
+        print("Getting joint function...")
+        joint_function = get_joint_function(joint_type)
+        
+        print(f"Starting {joint_type} simulation...")
+        
+        # Call the joint function with explicit error handling
         try:
-            from StrapJoint import StrapJoint
-            StrapJoint(
+            joint_function(
                 overlap=overlap, 
                 adhesive=adhesive_object, 
                 film_thickness=film_thickness, 
                 cores=cores
             )
         except ImportError as e:
-            print(f"Error importing StrapJoint module: {e}")
+            print(f"Error importing joint module: {e}")
             print(f"Current directory: {os.getcwd()}")
             print(f"Python path: {sys.path}")
             return False
         except Exception as e:
-            print(f"Error in StrapJoint execution: {e}")
+            print(f"Error in joint execution: {e}")
             return False
         
         print("Job submitted and completed successfully")
@@ -112,6 +148,10 @@ def main():
     # Get the project root using our robust function
     project_root = find_project_root()
     
+    # Read joint type from config
+    joint_type_from_config = read_config()
+    print(f"Joint type from config: {joint_type_from_config}")
+    
     # Extract the --single argument position
     try:
         single_index = sys.argv.index('--single')
@@ -121,7 +161,8 @@ def main():
     # Check if running in single point mode
     if single_index != -1:
         if len(sys.argv) < single_index + 5:
-            print("Usage for single point: abaqus cae noGUI=run_simulations.py -- --single overlap adhesive film_thickness cores")
+            print("Usage for single point: abaqus cae noGUI=run_simulations.py -- --single overlap adhesive film_thickness cores [joint_type]")
+            print("  joint_type is optional, defaults to SAP (Strap Joint). Use SEP for Stepped Joint.")
             return
         
         try:
@@ -130,14 +171,16 @@ def main():
             adhesive_name = sys.argv[single_index + 2]
             film_thickness = float(sys.argv[single_index + 3])
             cores = int(sys.argv[single_index + 4])
+            joint_type = sys.argv[single_index + 5] if len(sys.argv) > single_index + 5 else 'SAP'
             
             print(f"Running single point simulation with parameters:")
+            print(f"  Joint Type: {joint_type}")
             print(f"  Overlap: {overlap}")
             print(f"  Adhesive: {adhesive_name}")
             print(f"  Film thickness: {film_thickness}")
             print(f"  Cores: {cores}")
             
-            success = run_single_point(overlap, adhesive_name, film_thickness, cores)
+            success = run_single_point(overlap, adhesive_name, film_thickness, cores, joint_type)
             sys.exit(0 if success else 1)
             
         except ValueError as e:
@@ -167,13 +210,14 @@ def main():
                     film_thickness = float(params['Film_thickness'])
                     cores = int(params['Cores'])
                     
-                    # 2. Get the corresponding material object
+                    # 2. Get the corresponding material object and joint function from config
                     adhesive_object = get_adhesive_object(adhesive_name)
+                    joint_function = get_joint_function(joint_type_from_config)
                     
-                    print(f"  Overlap: {overlap} mm, Adhesive: {adhesive_name}, Thickness: {film_thickness} mm, Cores: {cores}")
+                    print(f"  Joint Type: {joint_type_from_config}, Overlap: {overlap} mm, Adhesive: {adhesive_name}, Thickness: {film_thickness} mm, Cores: {cores}")
                     
-                    # 3. Call the StrapJoint function (The modeling and job run starts here)
-                    StrapJoint(
+                    # 3. Call the appropriate joint function (The modeling and job run starts here)
+                    joint_function(
                         overlap=overlap, 
                         adhesive=adhesive_object, 
                         film_thickness=film_thickness, 

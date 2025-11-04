@@ -301,14 +301,36 @@ def SteppedJoint(overlap, adhesive, film_thickness, cores, L=150.0, B=25.0, th=2
     for i in range(1, num_steps):
         f1_face = f1.findAt(((L - i*LStep + LStep/2, i*HStep, B/2),))
         f1_faces.append(f1_face)
-    a.Surface(side1Faces=tuple(f1_faces), name='Fuegepartner1-Klebeflaeche')
+    
+    f1 = a.instances['Fuegepartner1-1'].faces
+    f1_faces2 = []
+    for i in range(num_steps):
+        faces = f1.getByBoundingBox(
+            xMin=L - i*LStep, xMax=L - i*LStep,
+            yMin=i*HStep, yMax=(i+1)*HStep,
+            zMin=0, zMax=B
+        )
+        f1_faces2.append(faces)
+
+    a.Surface(side1Faces=tuple(f1_faces) + tuple(f1_faces2), name='Fuegepartner1-Klebeflaeche')
 
     f1 = a.instances['Fuegepartner2-1'].faces
     f1_faces = []
     for i in range(1, num_steps):
         f1_face = f1.findAt(((L - Overlap + i*LStep - LStep/2, th - i*HStep, B/2),))
         f1_faces.append(f1_face)
-    a.Surface(side1Faces=tuple(f1_faces), name='Fuegepartner2-Klebeflaeche')
+
+    f1 = a.instances['Fuegepartner2-1'].faces
+    f1_faces2 = []
+    for i in range(num_steps):
+        faces = f1.getByBoundingBox(
+            xMin=L - i*LStep, xMax=L - i*LStep,
+            yMin=i*HStep, yMax=(i+1)*HStep,
+            zMin=0, zMax=B
+        )
+        f1_faces2.append(faces)
+
+    a.Surface(side1Faces=tuple(f1_faces) + tuple(f1_faces2), name='Fuegepartner2-Klebeflaeche')
 
     f1 = a.instances['Fuegepartner1-1'].faces
     f1_1 = f1.findAt(((25, th, B/2),))

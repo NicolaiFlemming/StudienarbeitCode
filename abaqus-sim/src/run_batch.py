@@ -41,22 +41,23 @@ def read_config(project_root):
     
     if not config_path.exists():
         print(f"Warning: config.ini not found at {config_path}. Using defaults.")
-        return 'SAP', 28  # Default values
+        return 'SAP', 28, 'abaqus'  # Default values
     
     config.read(config_path)
     
     joint_type = config.get('simulation', 'joint_type', fallback='SAP').strip()
     cpu_cores = config.getint('simulation', 'cpu_cores', fallback=28)
+    abaqus_cmd = config.get('simulation', 'abaqus_command', fallback='abaqus').strip()
     
-    return joint_type, cpu_cores
+    return joint_type, cpu_cores, abaqus_cmd
 
 
-def run_abaqus_simulation(overlap, adhesive, film_thickness, cores, joint_type, project_root):
+def run_abaqus_simulation(overlap, adhesive, film_thickness, cores, joint_type, project_root, abaqus_cmd='abaqus'):
     """Run a single Abaqus simulation using subprocess."""
     
     # Construct the Abaqus command
     cmd = [
-        'abaqus',
+        abaqus_cmd,
         'cae',
         'noGUI=src/run_simulations.py',
         '--',
@@ -115,10 +116,11 @@ def main():
     print(f"\nProject root: {project_root}")
     
     # Read configuration
-    joint_type, default_cores = read_config(project_root)
+    joint_type, default_cores, abaqus_cmd = read_config(project_root)
     print(f"Configuration:")
     print(f"  Joint type: {joint_type}")
     print(f"  Default CPU cores: {default_cores}")
+    print(f"  Abaqus command: {abaqus_cmd}")
     
     # Find and read sim_params.csv
     params_file = project_root / 'inputs' / 'sim_params.csv'
@@ -165,7 +167,7 @@ def main():
                     # Run the simulation
                     success = run_abaqus_simulation(
                         overlap, adhesive, film_thickness, 
-                        cores, joint_type, project_root
+                        cores, joint_type, project_root, abaqus_cmd
                     )
                     
                     if success:

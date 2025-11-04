@@ -43,7 +43,9 @@ AF163 = AdhesiveMaterial(
 
 def SteppedJoint(overlap, adhesive, film_thickness, cores, L=150.0, B=25.0, th=2.0, pl=8, num_steps=4, orientation_values= [-45.0, 0.0, 45.0, 90.0, 90.0, 45.0, 0.0, -45.0]):
 
-    overlap_str = f"{overlap}"
+    # Round overlap to 2 decimal places and format
+    # Round overlap to 4 decimal places and keep all 4 decimals
+    overlap_str = f"{round(float(overlap), 4):.4f}".replace(".", "p")
     # Format film thickness
     if film_thickness < 1:
         film_thickness_str = f"{int(film_thickness * 1000)}mu"  # e.g., 0.12 -> 120mu

@@ -55,11 +55,14 @@ def read_config(project_root):
 def run_abaqus_simulation(overlap, adhesive, film_thickness, cores, joint_type, project_root, abaqus_cmd='abaqus'):
     """Run a single Abaqus simulation using subprocess."""
     
-    # Construct the Abaqus command
+    # Get full path to run_simulations.py
+    run_script = project_root / 'src' / 'run_simulations.py'
+    
+    # Construct the Abaqus command with full path
     cmd = [
         abaqus_cmd,
         'cae',
-        'noGUI=src/run_simulations.py',
+        f'noGUI={run_script}',
         '--',
         '--single',
         str(overlap),

@@ -12,10 +12,10 @@ def find_project_root():
     # Start with the current working directory
     current_dir = os.path.abspath(os.getcwd())
     
-    # Try to find 'abaqus-strapjoint-sim' in the path
+    # Try to find 'abaqus-sim' in the path
     while True:
         # Check if we're in the project root
-        if os.path.basename(current_dir) == 'abaqus-strapjoint-sim':
+        if os.path.basename(current_dir) == 'abaqus-sim':
             return current_dir
         
         # Check if we've reached the root of the filesystem

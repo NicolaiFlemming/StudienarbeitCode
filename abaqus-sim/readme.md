@@ -34,7 +34,7 @@ abaqus-sim/
    python ../doe/ccdplan.py  # Central Composite Design
    ```
 
-2. Run simulations from the root (`abaqus-strapjoint-sim`) directory:
+2. Run simulations from the root (`abaqus-sim`) directory:
    ```sh
    abaqus cae noGui=src/run_simulations.py
    ```

@@ -57,9 +57,9 @@ step_X2 = (max_X2 - min_X2) / 2
 df['Overlap'] = (center_X1 + df['X1'] * step_X1).round(4)
 df['Film_thickness'] = (center_X2 + df['X2'] * step_X2).round(4)
 
-df2 = df[['Overlap', 'Film_thickness']]
-df2['Adhesive'] = Adhesive
-df2['Cores'] = Cores
+df2 = df[['Overlap', 'Film_thickness']].copy()
+df2.loc[:, 'Adhesive'] = Adhesive
+df2.loc[:, 'Cores'] = Cores
 
 # Try to find the correct inputs directory
 script_dir = Path(__file__).parent.resolve()

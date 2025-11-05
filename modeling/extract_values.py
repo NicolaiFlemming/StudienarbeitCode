@@ -28,8 +28,8 @@ if not csv_path:
     exit()
 
 # === Step 3: Filename pattern ===
-# Example: SAP66p21_220mu_DP490.odb
-pattern = re.compile(r"SAP(\d+p\d+)_([0-9]+)mu_([A-Za-z0-9]+)\.odb", re.IGNORECASE)
+# Example: SAP66p21_220mu_DP490.odb or SEP66p21_220mu_DP490.odb
+pattern = re.compile(r"(SAP|SEP)(\d+p\d+)_([0-9]+)mu_([A-Za-z0-9]+)\.odb", re.IGNORECASE)
 
 # Get path to extract_rf1_single.py script
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -51,12 +51,13 @@ with open(csv_path, 'w', newline='') as csvfile:
         # --- Parse file name ---
         match = pattern.match(odb_name)
         if match:
-            overlap_str = match.group(1).replace('p', '.')   # e.g. "66p21" → "66.21"
+            joint_type = match.group(1)                      # SAP or SEP
+            overlap_str = match.group(2).replace('p', '.')   # e.g. "66p21" → "66.21"
             overlap = float(overlap_str)
-            thickness = float(match.group(2)) / 1000.0       # e.g. 220µm → 0.22 mm
-            adhesive = match.group(3)
+            thickness = float(match.group(3)) / 1000.0       # e.g. 220µm → 0.22 mm
+            adhesive = match.group(4)
         else:
-            overlap, thickness, adhesive = None, None, None
+            joint_type, overlap, thickness, adhesive = None, None, None, None
             print(f" Could not parse info from {odb_name}")
 
         # --- Extract RF1 using extract_rf1_single.py ---

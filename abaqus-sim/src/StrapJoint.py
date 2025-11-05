@@ -451,7 +451,7 @@ def StrapJoint(overlap, adhesive, film_thickness, cores, L=150.0, B=25.0, th=2.0
 
     #create filter field and history output
     mymodel.OperatorFilter(name='MinValue', operation=MIN, 
-        limit=-0.1, halt=ON)
+        limit=-5, halt=ON)
     
     mymodel.fieldOutputRequests['F-Output-1'].setValues(variables=(
         'DAMAGEC', 'DAMAGEFC', 'DAMAGEFT', 'DAMAGEMC', 'DAMAGEMT', 'DAMAGESHR', 'DAMAGET', 'DMICRT', 'LE', 'S', 'SDEG', 'STATUS'),

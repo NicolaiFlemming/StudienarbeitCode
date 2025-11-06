@@ -52,15 +52,15 @@ abaqus-sim/
 
 For running a single simulation with specific parameters:
 ```sh
-abaqus cae noGui=src/run_simulations.py -- --single <overlap> <adhesive> <film_thickness> <cores> <joint_type>
+abaqus cae noGui=src/run_simulations.py -- <overlap> <adhesive> <film_thickness> <cores> <joint_type>
 ```
 Example (Strap Joint):
 ```sh
-abaqus cae noGui=src/run_simulations.py -- --single 45.0 DP490 0.25 28 SAP
+abaqus cae noGui=src/run_simulations.py -- 45.0 DP490 0.25 28 SAP
 ```
 Example (Stepped Joint):
 ```sh
-abaqus cae noGui=src/run_simulations.py -- --single 45.0 DP490 0.25 28 SEP
+abaqus cae noGui=src/run_simulations.py -- 45.0 DP490 0.25 28 SEP
 ```
 
 ## Input Parameters

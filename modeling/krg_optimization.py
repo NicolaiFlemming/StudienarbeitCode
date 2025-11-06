@@ -229,7 +229,7 @@ def run_optimization_loop(n_iterations=5, results_file='results.csv'):
             job_name = f"{JOINT_TYPE}{overlap_str}_{thickness_microns}mu_{ADHESIVE_TYPE}"
             
             # Launch Abaqus simulation and capture output
-            cmd = f'abaqus cae noGUI=run_simulations.py -- --single {overlap} {ADHESIVE_TYPE} {adhesive_thickness} {CPU_CORES} {JOINT_TYPE}'
+            cmd = f'abaqus cae noGUI=run_simulations.py -- {overlap} {ADHESIVE_TYPE} {adhesive_thickness} {CPU_CORES} {JOINT_TYPE}'
             result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
             
             # Print Abaqus output

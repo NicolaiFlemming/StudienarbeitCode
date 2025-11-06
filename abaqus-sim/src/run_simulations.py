@@ -122,21 +122,25 @@ def run_single_point(overlap, adhesive_name, film_thickness, cores, joint_type='
         return False
 
 def main():
-    """Main entry point - expects to be called with --single argument."""
-    # Extract the --single argument position
-    try:
-        single_index = sys.argv.index('--single')
-    except ValueError:
-        print("ERROR: This script must be called with --single argument.")
-        print("Usage: abaqus cae noGUI=run_simulations.py -- --single overlap adhesive film_thickness cores joint_type")
-        print("Example: abaqus cae noGUI=run_simulations.py -- --single 30.0 DP490 0.1 28 SAP")
+    """Main entry point - expects 5 positional arguments after --."""
+    # Check if we have the -- separator
+    if '--' not in sys.argv:
+        print("ERROR: This script must be called with -- separator before arguments.")
+        print("Usage: abaqus cae noGUI=run_simulations.py -- overlap adhesive film_thickness cores joint_type")
+        print("Example: abaqus cae noGUI=run_simulations.py -- 30.0 DP490 0.1 28 SAP")
         print("\nFor batch processing, use run_batch.py instead.")
         sys.exit(1)
 
+    # Find the -- separator
+    separator_index = sys.argv.index('--')
+    
+    # Arguments come after --
+    args = sys.argv[separator_index + 1:]
+    
     # Check we have all required arguments
-    if len(sys.argv) < single_index + 6:
-        print("ERROR: Missing arguments for single point simulation.")
-        print("Usage: abaqus cae noGUI=run_simulations.py -- --single overlap adhesive film_thickness cores joint_type")
+    if len(args) < 5:
+        print("ERROR: Missing arguments.")
+        print("Usage: abaqus cae noGUI=run_simulations.py -- overlap adhesive film_thickness cores joint_type")
         print("  overlap: Overlap length in mm (e.g., 30.0)")
         print("  adhesive: Adhesive type (DP490 or AF163)")
         print("  film_thickness: Film thickness in mm (e.g., 0.1)")
@@ -146,13 +150,13 @@ def main():
     
     try:
         # Parse arguments
-        overlap = float(sys.argv[single_index + 1])
-        adhesive_name = sys.argv[single_index + 2]
-        film_thickness = float(sys.argv[single_index + 3])
-        cores = int(sys.argv[single_index + 4])
-        joint_type = sys.argv[single_index + 5]
+        overlap = float(args[0])
+        adhesive_name = args[1]
+        film_thickness = float(args[2])
+        cores = int(args[3])
+        joint_type = args[4]
         
-        print(f"Running single point simulation with parameters:")
+        print(f"Running simulation with parameters:")
         print(f"  Joint Type: {joint_type}")
         print(f"  Overlap: {overlap}")
         print(f"  Adhesive: {adhesive_name}")

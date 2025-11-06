@@ -122,20 +122,31 @@ def run_single_point(overlap, adhesive_name, film_thickness, cores, joint_type='
         return False
 
 def main():
-    """Main entry point - expects 5 positional arguments after --."""
-    # Check if we have the -- separator
-    if '--' not in sys.argv:
-        print("ERROR: This script must be called with -- separator before arguments.")
-        print("Usage: abaqus cae noGUI=run_simulations.py -- overlap adhesive film_thickness cores joint_type")
-        print("Example: abaqus cae noGUI=run_simulations.py -- 30.0 DP490 0.1 28 SAP")
-        print("\nFor batch processing, use run_batch.py instead.")
-        sys.exit(1)
-
-    # Find the -- separator
-    separator_index = sys.argv.index('--')
+    """Main entry point - expects 5 positional arguments."""
+    # Abaqus may or may not preserve the -- separator, so we need to handle both cases
     
-    # Arguments come after --
-    args = sys.argv[separator_index + 1:]
+    # Check if we have the -- separator
+    if '--' in sys.argv:
+        # Find the -- separator and get args after it
+        separator_index = sys.argv.index('--')
+        args = sys.argv[separator_index + 1:]
+    else:
+        # No -- separator, try to find args at the end of sys.argv
+        # Look for numeric values that could be our parameters
+        # Skip Abaqus-specific arguments that start with '-'
+        potential_args = []
+        for i in range(len(sys.argv) - 1, -1, -1):
+            arg = sys.argv[i]
+            # Stop if we hit a flag or the script name
+            if arg.startswith('-') or arg.endswith('.py'):
+                break
+            potential_args.insert(0, arg)
+        
+        # We expect exactly 5 arguments
+        if len(potential_args) >= 5:
+            args = potential_args[-5:]  # Take the last 5
+        else:
+            args = []
     
     # Check we have all required arguments
     if len(args) < 5:
@@ -146,6 +157,7 @@ def main():
         print("  film_thickness: Film thickness in mm (e.g., 0.1)")
         print("  cores: Number of CPU cores (e.g., 28)")
         print("  joint_type: Joint type (SAP or SEP)")
+        print(f"\nReceived sys.argv: {sys.argv}")
         sys.exit(1)
     
     try:
@@ -168,6 +180,7 @@ def main():
         
     except ValueError as e:
         print(f"Error in parameter conversion: {e}")
+        print(f"Args received: {args}")
         sys.exit(1)
     except Exception as e:
         print(f"Unexpected error: {e}")

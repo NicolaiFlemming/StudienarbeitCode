@@ -1,7 +1,5 @@
-import csv
 import os
 import sys
-import configparser
 
 # ----------------------------------------------------------------------
 # ROBUST PATH DETERMINATION
@@ -70,27 +68,6 @@ def get_joint_function(joint_type):
     else:
         raise ValueError(f"Unknown joint type: {joint_type}. Must be 'SAP' or 'SEP'.")
 
-def read_config():
-    """Read configuration from config.ini file."""
-    # Navigate up from src to project root to find config.ini
-    project_root = find_project_root()
-    # Go up one more level to find config.ini in the repo root
-    config_path = os.path.join(os.path.dirname(project_root), 'config.ini')
-    
-    config = configparser.ConfigParser()
-    
-    # Check if config file exists
-    if not os.path.exists(config_path):
-        print(f"Warning: config.ini not found at {config_path}. Using defaults.")
-        return 'SAP'  # Default to Strap Joint
-    
-    config.read(config_path)
-    
-    # Read joint type from config, default to SAP
-    joint_type = config.get('simulation', 'joint_type', fallback='SAP').strip()
-    
-    return joint_type
-
 # ----------------------------------------------------------------------
 # MAIN EXECUTION
 # ----------------------------------------------------------------------
@@ -145,100 +122,54 @@ def run_single_point(overlap, adhesive_name, film_thickness, cores, joint_type='
         return False
 
 def main():
-    # Get the project root using our robust function
-    project_root = find_project_root()
-    
-    # Read joint type from config
-    joint_type_from_config = read_config()
-    print(f"Joint type from config: {joint_type_from_config}")
-    
+    """Main entry point - expects to be called with --single argument."""
     # Extract the --single argument position
     try:
         single_index = sys.argv.index('--single')
     except ValueError:
-        single_index = -1
+        print("ERROR: This script must be called with --single argument.")
+        print("Usage: abaqus cae noGUI=run_simulations.py -- --single overlap adhesive film_thickness cores joint_type")
+        print("Example: abaqus cae noGUI=run_simulations.py -- --single 30.0 DP490 0.1 28 SAP")
+        print("\nFor batch processing, use run_batch.py instead.")
+        sys.exit(1)
 
-    # Check if running in single point mode
-    if single_index != -1:
-        if len(sys.argv) < single_index + 5:
-            print("Usage for single point: abaqus cae noGUI=run_simulations.py -- --single overlap adhesive film_thickness cores [joint_type]")
-            print("  joint_type is optional, defaults to SAP (Strap Joint). Use SEP for Stepped Joint.")
-            return
-        
-        try:
-            # Arguments come after --single
-            overlap = float(sys.argv[single_index + 1])
-            adhesive_name = sys.argv[single_index + 2]
-            film_thickness = float(sys.argv[single_index + 3])
-            cores = int(sys.argv[single_index + 4])
-            joint_type = sys.argv[single_index + 5] if len(sys.argv) > single_index + 5 else 'SAP'
-            
-            print(f"Running single point simulation with parameters:")
-            print(f"  Joint Type: {joint_type}")
-            print(f"  Overlap: {overlap}")
-            print(f"  Adhesive: {adhesive_name}")
-            print(f"  Film thickness: {film_thickness}")
-            print(f"  Cores: {cores}")
-            
-            success = run_single_point(overlap, adhesive_name, film_thickness, cores, joint_type)
-            sys.exit(0 if success else 1)
-            
-        except ValueError as e:
-            print(f"Error in parameter conversion: {e}")
-            sys.exit(1)
-    params_file = os.path.join(project_root, 'inputs', 'sim_params.csv')
-    
-    if not os.path.exists(params_file):
-        print(f"Error: Input file '{params_file}' not found.")
-        print(f"Looked for CSV at: {params_file}")
-        return
-
-    print(f"Starting Abaqus simulations using parameters from {params_file}...")
+    # Check we have all required arguments
+    if len(sys.argv) < single_index + 6:
+        print("ERROR: Missing arguments for single point simulation.")
+        print("Usage: abaqus cae noGUI=run_simulations.py -- --single overlap adhesive film_thickness cores joint_type")
+        print("  overlap: Overlap length in mm (e.g., 30.0)")
+        print("  adhesive: Adhesive type (DP490 or AF163)")
+        print("  film_thickness: Film thickness in mm (e.g., 0.1)")
+        print("  cores: Number of CPU cores (e.g., 28)")
+        print("  joint_type: Joint type (SAP or SEP)")
+        sys.exit(1)
     
     try:
-        with open(params_file, mode='r') as file:
-            reader = csv.DictReader(file)
-            
-            for i, params in enumerate(reader):
-                print("-" * 40)
-                print(f"Processing Scenario {i + 1}:")
-                
-                try:
-                    # 1. Parameter extraction and type conversion
-                    overlap = float(params['Overlap'])
-                    adhesive_name = params['Adhesive'].strip()
-                    film_thickness = float(params['Film_thickness'])
-                    cores = int(params['Cores'])
-                    
-                    # 2. Get the corresponding material object and joint function from config
-                    adhesive_object = get_adhesive_object(adhesive_name)
-                    joint_function = get_joint_function(joint_type_from_config)
-                    
-                    print(f"  Joint Type: {joint_type_from_config}, Overlap: {overlap} mm, Adhesive: {adhesive_name}, Thickness: {film_thickness} mm, Cores: {cores}")
-                    
-                    # 3. Call the appropriate joint function (The modeling and job run starts here)
-                    joint_function(
-                        overlap=overlap, 
-                        adhesive=adhesive_object, 
-                        film_thickness=film_thickness, 
-                        cores=cores
-                    )
-                    
-                    print(f"  Job finished successfully for Scenario {i + 1}. CAE saved to: {project_root}")
-                    
-                except KeyError as e:
-                    print(f"Error in CSV format: Missing column {e}. Check headers.")
-                    break
-                except ValueError as e:
-                    print(f"Error in data conversion or adhesive lookup: {e}")
-                    break
-                except Exception as e:
-                    print(f"An Abaqus error occurred during Scenario {i + 1}: {e}")
-                    # You might want to remove 'break' here to continue to the next job, but for debugging, 'break' is safer.
-                    break 
-
+        # Parse arguments
+        overlap = float(sys.argv[single_index + 1])
+        adhesive_name = sys.argv[single_index + 2]
+        film_thickness = float(sys.argv[single_index + 3])
+        cores = int(sys.argv[single_index + 4])
+        joint_type = sys.argv[single_index + 5]
+        
+        print(f"Running single point simulation with parameters:")
+        print(f"  Joint Type: {joint_type}")
+        print(f"  Overlap: {overlap}")
+        print(f"  Adhesive: {adhesive_name}")
+        print(f"  Film thickness: {film_thickness}")
+        print(f"  Cores: {cores}")
+        
+        success = run_single_point(overlap, adhesive_name, film_thickness, cores, joint_type)
+        sys.exit(0 if success else 1)
+        
+    except ValueError as e:
+        print(f"Error in parameter conversion: {e}")
+        sys.exit(1)
     except Exception as e:
-        print(f"An unexpected error occurred while reading the file: {e}")
+        print(f"Unexpected error: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
 
 if __name__ == '__main__':
     print("Starting run_simulations.py")

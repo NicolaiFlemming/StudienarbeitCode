@@ -23,6 +23,7 @@ config.read(config_path)
 # Configuration parameters
 ADHESIVE_TYPE = config.get('simulation', 'adhesive_type')
 CPU_CORES = config.getint('simulation', 'cpu_cores')
+JOINT_TYPE = config.get('simulation', 'joint_type', fallback='SAP')
 N_ITERATIONS = config.getint('optimization', 'n_iterations')
 
 def select_results_file():
@@ -63,7 +64,7 @@ def get_rf1_from_odb(overlap_mm, thickness_mm):
     thickness_microns = format_thickness_for_filename(thickness_mm)
     
     # Construct the expected ODB filename
-    odb_name = f"SAP{overlap_str}_{thickness_microns}mu_{ADHESIVE_TYPE}.odb"
+    odb_name = f"{JOINT_TYPE}{overlap_str}_{thickness_microns}mu_{ADHESIVE_TYPE}.odb"
     odb_path = os.path.join(abaqus_dir, odb_name)
     
     if not os.path.exists(odb_path):
@@ -117,7 +118,7 @@ def update_results_csv(overlap, thickness, rf1_value, region_name, results_file=
     # Create filename as it appears in the ODB
     overlap_str = format_overlap_for_filename(overlap)
     thickness_microns = format_thickness_for_filename(thickness)
-    odb_filename = f"SAP{overlap_str}_{thickness_microns}mu_{ADHESIVE_TYPE}.odb"
+    odb_filename = f"{JOINT_TYPE}{overlap_str}_{thickness_microns}mu_{ADHESIVE_TYPE}.odb"
     
     new_result = pd.DataFrame({
         'ODB_File': [odb_filename],
@@ -225,10 +226,10 @@ def run_optimization_loop(n_iterations=5, results_file='results.csv'):
             # First, construct the job name as it will appear in Abaqus
             overlap_str = format_overlap_for_filename(overlap)
             thickness_microns = format_thickness_for_filename(adhesive_thickness)
-            job_name = f"SAP{overlap_str}_{thickness_microns}mu_{ADHESIVE_TYPE}"
+            job_name = f"{JOINT_TYPE}{overlap_str}_{thickness_microns}mu_{ADHESIVE_TYPE}"
             
             # Launch Abaqus simulation and capture output
-            cmd = f'abaqus cae noGUI=run_simulations.py -- --single {overlap} {ADHESIVE_TYPE} {adhesive_thickness} {CPU_CORES}'
+            cmd = f'abaqus cae noGUI=run_simulations.py -- --single {overlap} {ADHESIVE_TYPE} {adhesive_thickness} {CPU_CORES} {JOINT_TYPE}'
             result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
             
             # Print Abaqus output

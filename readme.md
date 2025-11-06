@@ -1,6 +1,6 @@
-# CFRP Strap Joint Analysis Framework
+# CFRP Joint Analysis Framework
 
-This repository contains a comprehensive framework for analyzing Carbon Fiber Reinforced Polymer (CFRP) strap joints using a combination of Finite Element Method (FEM) simulations and surrogate modeling techniques.
+This repository contains a comprehensive framework for analyzing Carbon Fiber Reinforced Polymer (CFRP) joints using a combination of Finite Element Method (FEM) simulations and surrogate modeling techniques. Supports both Strap Joints (SAP) and Stepped Joints (SEP).
 
 ## Project Structure
 
@@ -9,6 +9,10 @@ StudienarbeitCode/
 ├── abaqus-sim/              # FEM simulation framework
 │   ├── inputs/               # Simulation parameters and inputs
 │   └── src/                  # Abaqus Python scripts
+│       ├── run_simulations.py    # Single simulation executor
+│       ├── run_batch.py          # Batch processing wrapper
+│       ├── StrapJoint.py         # Strap joint (SAP) model
+│       └── SteppedJoint.py       # Stepped joint (SEP) model
 ├── doe/                      # Design of Experiments
 │   ├── ccdplan.py           # Central Composite Design generator
 │   └── lhsplan.py           # Latin Hypercube Sampling generator
@@ -26,10 +30,11 @@ StudienarbeitCode/
 
 ### FEM Simulation
 - Automated Abaqus CAE simulations
+- Support for Strap Joints (SAP) and Stepped Joints (SEP)
 - Support for multiple adhesive types (DP490, AF163)
 - Parametric joint geometry
 - Multi-core processing support
-- Batch processing capabilities
+- Batch processing capabilities via Python wrapper
 
 ### Design of Experiments
 - Latin Hypercube Sampling (LHS)
@@ -52,8 +57,10 @@ The project uses a centralized `config.ini` file for key parameters:
 
 ```ini
 [simulation]
+joint_type = SAP       # SAP for Strap Joints, SEP for Stepped Joints
 adhesive_type = DP490  # or AF163
 cpu_cores = 28
+abaqus_command = C:/SIMULIA/Commands/abq2025.bat  # Path to Abaqus executable
 
 [optimization]
 n_iterations = 5
@@ -63,8 +70,10 @@ n_iterations = 5
 
 ### 1. Configuration
 Update `config.ini` with your desired settings:
+- Set joint type (SAP for strap joints, SEP for stepped joints)
 - Set adhesive type (DP490 or AF163)
 - Configure CPU cores for simulations
+- Set path to Abaqus executable
 - Set optimization iterations
 
 ### 2. Generate Input Parameters
@@ -79,12 +88,15 @@ python doe/ccdplan.py  # Central Composite Design
 This generates `abaqus-sim/inputs/sim_params.csv`
 
 ### 3. Run FEM Simulations
-Execute Abaqus simulations as described in `abaqus-sim/readme.md`:
+Execute Abaqus simulations using the batch wrapper:
 
 ```sh
-cd abaqus-sim
-abaqus cae noGui=src/run_simulations.py
+python abaqus-sim/src/run_batch.py
 ```
+
+Or run from any location (the script auto-detects the project root).
+
+For advanced usage and single simulation mode, see `abaqus-sim/readme.md`.
 
 ### 4. Extract Results
 Extract results from ODB files:
@@ -169,4 +181,6 @@ This will generate:
 - Use LHS for Kriging surrogate models, CCD for response surface fitting
 - Verify RSM models with `rsm_verification.py` before using predictions
 - Kriging optimization iteratively adds points where uncertainty is highest
+- Use `run_batch.py` for batch processing from regular Python (automatically handles Abaqus environment)
+- Job names follow format: `{JOINT_TYPE}{overlap}_{thickness}mu_{adhesive}` (e.g., SAP45p0000_250mu_DP490 or SEP30p0000_100mu_DP490)
 

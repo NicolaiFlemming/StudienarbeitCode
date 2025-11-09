@@ -85,7 +85,8 @@ python doe/lhsplan.py  # Latin Hypercube Sampling
 python doe/ccdplan.py  # Central Composite Design
 ```
 
-This generates `abaqus-sim/inputs/sim_params.csv`
+This generates `abaqus-sim/inputs/sim_params.csv` containing only DOE parameters (Overlap and Film_thickness).
+Configuration parameters (adhesive type, cores, joint type) are read from `config.ini`.
 
 ### 3. Run FEM Simulations
 Execute Abaqus simulations using the batch wrapper:

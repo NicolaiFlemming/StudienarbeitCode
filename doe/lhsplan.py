@@ -31,10 +31,6 @@ if not config_found:
         print(f"- {path}")
     sys.exit(1)
 
-# Get values from config
-Cores = config.getint('simulation', 'cpu_cores')
-Adhesive = config.get('simulation', 'adhesive_type')
-
 # Define the number of factors (d) and the number of samples (n)
 d = 2  # Number of factors (Overlap, Film_thickness)
 # Number of samples
@@ -65,12 +61,10 @@ def scale_factors(df, ranges):
 
 df_final = scale_factors(df, factor_ranges)
 
-# Create the final DataFrame with the required columns
+# Create the final DataFrame with only DOE parameters
 output_df = pd.DataFrame({
     'Overlap': df_final['X1'].round(4),
-    'Adhesive': [Adhesive] * len(df_final),
-    'Film_thickness': df_final['X2'].round(4),
-    'Cores': [Cores] * len(df_final)
+    'Film_thickness': df_final['X2'].round(4)
 })
 
 # Export to CSV
@@ -103,5 +97,8 @@ if input_dir is None:
 
 output_filename = str(input_dir / 'sim_params.csv')
 output_df.to_csv(output_filename, index=False)
-print(f"\nExported to {output_filename} with the following format:")
-print(output_df)
+print(f"\nGenerated {len(output_df)} design points")
+print(f"CSV saved to: {output_filename}")
+print(f"\nFirst few rows:")
+print(output_df.head())
+print("\nNote: Adhesive type, CPU cores, and joint type are configured in config.ini")

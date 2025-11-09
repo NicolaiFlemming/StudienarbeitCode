@@ -1,4 +1,4 @@
-Overlap,Adhesive,Film_thickness,Cores
-30.0,DP490,0.1,28
-45,DP490,0.1,28
-60,DP490,0.1,28
+Overlap,Film_thickness
+30.0,0.1
+45.0,0.225
+60.0,0.35

@@ -142,11 +142,10 @@ def update_results_csv(overlap, thickness, rf1_value, region_name, results_file=
 
 def add_point_to_sim_params(overlap, adhesive_thickness):
     """Add a new point to the simulation parameters CSV file."""
+    # Only store DOE parameters - config values are in config.ini
     new_point = pd.DataFrame({
         'Overlap': [round(float(overlap), 4)],
-        'Adhesive': [ADHESIVE_TYPE],
-        'Film_thickness': [round(float(adhesive_thickness), 4)],
-        'Cores': [CPU_CORES]
+        'Film_thickness': [round(float(adhesive_thickness), 4)]
     })
     
     script_dir = os.path.dirname(os.path.abspath(__file__))

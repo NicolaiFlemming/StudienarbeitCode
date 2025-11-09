@@ -30,10 +30,6 @@ if not config_found:
         print(f"- {path}")
     sys.exit(1)
 
-# Get values from config
-Cores = config.getint('simulation', 'cpu_cores')
-Adhesive = config.get('simulation', 'adhesive_type')
-
 #create a central composite design with 2 factors and 2 center points, one for the factorial points and one for the axial points
 design = ccdesign(2, center=(1, 1), face='ccc')
 
@@ -57,9 +53,8 @@ step_X2 = (max_X2 - min_X2) / 2
 df['Overlap'] = (center_X1 + df['X1'] * step_X1).round(4)
 df['Film_thickness'] = (center_X2 + df['X2'] * step_X2).round(4)
 
+# Only keep the DOE parameters (Overlap and Film_thickness)
 df2 = df[['Overlap', 'Film_thickness']].copy()
-df2.loc[:, 'Adhesive'] = Adhesive
-df2.loc[:, 'Cores'] = Cores
 
 # Try to find the correct inputs directory
 script_dir = Path(__file__).parent.resolve()
@@ -89,5 +84,7 @@ if input_dir is None:
     sys.exit(1)
 
 output_filename = str(input_dir / 'sim_params.csv')
-export_df = df2[['Overlap', 'Adhesive', 'Film_thickness', 'Cores']]
-export_df.to_csv(output_filename, index=False)
+df2.to_csv(output_filename, index=False)
+print(f"\nGenerated {len(df2)} design points")
+print(f"CSV saved to: {output_filename}")
+print("\nNote: Adhesive type, CPU cores, and joint type are configured in config.ini")

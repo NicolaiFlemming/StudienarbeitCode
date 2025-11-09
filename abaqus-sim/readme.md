@@ -65,16 +65,21 @@ abaqus cae noGui=src/run_simulations.py -- 45.0 DP490 0.25 28 SEP
 
 ## Input Parameters
 
-The `sim_params.csv` file should contain the following columns:
+The `sim_params.csv` file contains the Design of Experiments (DOE) parameters:
 
 | Column | Description | Range |
 |--------|-------------|--------|
 | Overlap | Joint overlap length in mm | 30.0 - 60.0 |
-| Adhesive | Adhesive type | 'DP490' or 'AF163' |
 | Film_thickness | Adhesive thickness in mm | 0.1 - 0.35 |
-| Cores | Number of CPU cores to use | 1 - available cores |
 
-Joint type is configured in `../config.ini` under `[simulation]` section.
+Configuration parameters (same for all simulations) are in `../config.ini`:
+
+| Parameter | Description | Options |
+|-----------|-------------|---------|
+| joint_type | Type of joint | 'SAP' (strap) or 'SEP' (stepped) |
+| adhesive_type | Adhesive material | 'DP490' or 'AF163' |
+| cpu_cores | Number of CPU cores | 1 - available cores |
+| abaqus_command | Path to Abaqus | Full path to executable |
 
 ## Monitoring Progress
 

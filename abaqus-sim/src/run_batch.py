@@ -41,15 +41,16 @@ def read_config(project_root):
     
     if not config_path.exists():
         print(f"Warning: config.ini not found at {config_path}. Using defaults.")
-        return 'SAP', 28, 'abaqus'  # Default values
+        return 'SAP', 'DP490', 28, 'abaqus'  # Default values
     
     config.read(config_path)
     
     joint_type = config.get('simulation', 'joint_type', fallback='SAP').strip()
+    adhesive_type = config.get('simulation', 'adhesive_type', fallback='DP490').strip()
     cpu_cores = config.getint('simulation', 'cpu_cores', fallback=28)
     abaqus_cmd = config.get('simulation', 'abaqus_command', fallback='abaqus').strip()
     
-    return joint_type, cpu_cores, abaqus_cmd
+    return joint_type, adhesive_type, cpu_cores, abaqus_cmd
 
 
 def convert_unc_to_drive(path_str):
@@ -157,10 +158,11 @@ def main():
     print(f"\nProject root: {project_root}")
     
     # Read configuration
-    joint_type, default_cores, abaqus_cmd = read_config(project_root)
+    joint_type, adhesive_type, default_cores, abaqus_cmd = read_config(project_root)
     print(f"Configuration:")
     print(f"  Joint type: {joint_type}")
-    print(f"  Default CPU cores: {default_cores}")
+    print(f"  Adhesive type: {adhesive_type}")
+    print(f"  CPU cores: {default_cores}")
     print(f"  Abaqus command: {abaqus_cmd}")
     
     # Find and read sim_params.csv
@@ -193,17 +195,19 @@ def main():
                 print(f"\n[{i}/{total}] Processing simulation {i}:")
                 
                 try:
-                    # Extract parameters
+                    # Extract DOE parameters from CSV
                     overlap = float(params['Overlap'])
-                    adhesive = params['Adhesive'].strip()
                     film_thickness = float(params['Film_thickness'])
-                    cores = int(params.get('Cores', default_cores))
+                    
+                    # Use config values for adhesive and cores (same for all simulations)
+                    adhesive = adhesive_type
+                    cores = default_cores
                     
                     print(f"  Overlap: {overlap} mm")
-                    print(f"  Adhesive: {adhesive}")
                     print(f"  Film thickness: {film_thickness} mm")
-                    print(f"  Cores: {cores}")
-                    print(f"  Joint type: {joint_type}")
+                    print(f"  Adhesive: {adhesive} (from config)")
+                    print(f"  Cores: {cores} (from config)")
+                    print(f"  Joint type: {joint_type} (from config)")
                     
                     # Run the simulation
                     success = run_abaqus_simulation(

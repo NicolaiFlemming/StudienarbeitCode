@@ -205,9 +205,9 @@ def main():
                     
                     print(f"  Overlap: {overlap} mm")
                     print(f"  Film thickness: {film_thickness} mm")
-                    print(f"  Adhesive: {adhesive} (from config)")
-                    print(f"  Cores: {cores} (from config)")
-                    print(f"  Joint type: {joint_type} (from config)")
+                    print(f"  Adhesive: {adhesive}")
+                    print(f"  Cores: {cores}")
+                    print(f"  Joint type: {joint_type}")
                     
                     # Run the simulation
                     success = run_abaqus_simulation(

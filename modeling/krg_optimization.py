@@ -193,7 +193,7 @@ def run_optimization_loop(n_iterations=5, results_file='results.csv'):
             'length_scale_overlap': hyperparameters['length_scale_overlap'],
             'length_scale_thickness': hyperparameters['length_scale_thickness'],
             'nu': hyperparameters['nu'],
-            'alpha': hyperparameters['alpha'],
+            'noise_level': hyperparameters['noise_level'],
             'log_marginal_likelihood': hyperparameters['log_marginal_likelihood']
         }
         

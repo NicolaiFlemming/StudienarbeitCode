@@ -1,3 +1,8 @@
 *.svg
 # Ignore simulation parameter CSV file
 # inputs/sim_params.csv
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo

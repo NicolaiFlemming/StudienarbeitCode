@@ -12,9 +12,9 @@ def initialize_model():
     """Initialize the Gaussian Process model with default parameters."""
     # Kernel Definition: Anisotropic Matérn 5/2 kernel
     initial_length_scales = [1.0, 1.0]
-    bounds_ls = (1e-3, 1e3)
+    bounds_ls = (1e-1, 1e2)
     
-    kernel = ConstantKernel(constant_value=1.0, constant_value_bounds=(1e-3, 1e3)) \
+    kernel = ConstantKernel(constant_value=1.0, constant_value_bounds=(1e-2, 1e2)) \
             * Matern(length_scale=initial_length_scales,
                     length_scale_bounds=bounds_ls,
                     nu=2.5)
@@ -163,6 +163,7 @@ def train_and_predict_kriging(file_path=None, show_plots=False):
         return None
     
     # Initialize and train model
+    print("\nTraining Kriging Model...")
     gp = initialize_model()
     gp.fit(X_train_scaled, Y_train_scaled)
     
@@ -176,6 +177,15 @@ def train_and_predict_kriging(file_path=None, show_plots=False):
         'alpha': gp.alpha,
         'log_marginal_likelihood': gp.log_marginal_likelihood_value_
     }
+    
+    # Display optimized hyperparameters
+    print("\nOptimized Hyperparameters:")
+    print(f"  Constant value: {hyperparameters['constant_value']:.4f}")
+    print(f"  Length scale (Overlap): {hyperparameters['length_scale_overlap']:.4f}")
+    print(f"  Length scale (Thickness): {hyperparameters['length_scale_thickness']:.4f}")
+    print(f"  Nu (Matern): {hyperparameters['nu']:.2f}")
+    print(f"  Alpha (noise): {hyperparameters['alpha']}")
+    print(f"  Log-Marginal-Likelihood: {hyperparameters['log_marginal_likelihood']:.2f}")
     
     # Create prediction grid
     X_test, xx1, xx2 = create_prediction_grid()

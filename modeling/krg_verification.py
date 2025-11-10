@@ -110,11 +110,13 @@ def main():
     # Extract hyperparameters
     optimized_kernel = gp.kernel_
     print("\nOptimized Hyperparameters:")
-    print(f"  Constant value: {optimized_kernel.k1.constant_value:.4f}")
-    print(f"  Length scale (Overlap): {optimized_kernel.k2.length_scale[0]:.4f}")
-    print(f"  Length scale (Thickness): {optimized_kernel.k2.length_scale[1]:.4f}")
-    print(f"  Nu (Matern): {optimized_kernel.k2.nu:.2f}")
-    print(f"  Alpha (noise): {gp.alpha}")
+    # Note: kernel structure is now (ConstantKernel * Matern) + WhiteKernel
+    # k1 is the sum, k1.k1 is the product, k1.k2 is WhiteKernel
+    print(f"  Constant value: {optimized_kernel.k1.k1.constant_value:.4f}")
+    print(f"  Length scale (Overlap): {optimized_kernel.k1.k2.length_scale[0]:.4f}")
+    print(f"  Length scale (Thickness): {optimized_kernel.k1.k2.length_scale[1]:.4f}")
+    print(f"  Nu (Matern): {optimized_kernel.k1.k2.nu:.2f}")
+    print(f"  Noise level (WhiteKernel): {optimized_kernel.k2.noise_level:.4e}")
     print(f"  Log-Marginal-Likelihood: {gp.log_marginal_likelihood_value_:.2f}")
     
     # Step 6: Predict on test data

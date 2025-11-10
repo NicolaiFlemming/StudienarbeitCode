@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
 from sklearn.gaussian_process import GaussianProcessRegressor
-from sklearn.gaussian_process.kernels import ConstantKernel, Matern, RBF
+from sklearn.gaussian_process.kernels import ConstantKernel, Matern, RBF, WhiteKernel
 import tkinter as tk
 from tkinter import filedialog
 
@@ -14,16 +14,19 @@ def initialize_model():
     initial_length_scales = [1.0, 1.0]
     bounds_ls = (1e-1, 1e2)
     
-    kernel = ConstantKernel(constant_value=1.0, constant_value_bounds=(1e-2, 1e2)) \
-            * Matern(length_scale=initial_length_scales,
-                    length_scale_bounds=bounds_ls,
-                    nu=2.5)
+    main_kernel = ConstantKernel(constant_value=1.0, constant_value_bounds=(1e-2, 1e2)) \
+                * Matern(length_scale=initial_length_scales,
+                        length_scale_bounds=bounds_ls,
+                        nu=2.5)
     
-    alpha_noise = 1e-10
+    # Define the noise kernel - let optimizer find the best noise level
+    noise_kernel = WhiteKernel(noise_level=1e-5, noise_level_bounds=(1e-10, 1e1))
+    
+    # Combine signal and noise kernels
+    kernel = main_kernel + noise_kernel
     
     return GaussianProcessRegressor(
         kernel=kernel,
-        alpha=alpha_noise,
         n_restarts_optimizer=100,
         random_state=42
     )
@@ -169,12 +172,14 @@ def train_and_predict_kriging(file_path=None, show_plots=False):
     
     # Extract hyperparameters after optimization
     optimized_kernel = gp.kernel_
+    # Note: kernel structure is now (ConstantKernel * Matern) + WhiteKernel
+    # k1 is the sum, k1.k1 is the product, k1.k2 is WhiteKernel
     hyperparameters = {
-        'constant_value': optimized_kernel.k1.constant_value,
-        'length_scale_overlap': optimized_kernel.k2.length_scale[0],
-        'length_scale_thickness': optimized_kernel.k2.length_scale[1],
-        'nu': optimized_kernel.k2.nu,
-        'alpha': gp.alpha,
+        'constant_value': optimized_kernel.k1.k1.constant_value,
+        'length_scale_overlap': optimized_kernel.k1.k2.length_scale[0],
+        'length_scale_thickness': optimized_kernel.k1.k2.length_scale[1],
+        'nu': optimized_kernel.k1.k2.nu,
+        'noise_level': optimized_kernel.k2.noise_level,
         'log_marginal_likelihood': gp.log_marginal_likelihood_value_
     }
     
@@ -184,7 +189,7 @@ def train_and_predict_kriging(file_path=None, show_plots=False):
     print(f"  Length scale (Overlap): {hyperparameters['length_scale_overlap']:.4f}")
     print(f"  Length scale (Thickness): {hyperparameters['length_scale_thickness']:.4f}")
     print(f"  Nu (Matern): {hyperparameters['nu']:.2f}")
-    print(f"  Alpha (noise): {hyperparameters['alpha']}")
+    print(f"  Noise level (WhiteKernel): {hyperparameters['noise_level']:.4e}")
     print(f"  Log-Marginal-Likelihood: {hyperparameters['log_marginal_likelihood']:.2f}")
     
     # Create prediction grid

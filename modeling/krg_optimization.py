@@ -169,6 +169,20 @@ def run_optimization_loop(n_iterations=5, results_file='results.csv'):
     print(f"Number of iterations: {n_iterations}")
     print("-" * 50)
     
+    # Create new results file name with _opt suffix
+    file_dir = os.path.dirname(results_file)
+    file_name = os.path.basename(results_file)
+    name_without_ext = os.path.splitext(file_name)[0]
+    ext = os.path.splitext(file_name)[1]
+    opt_results_file = os.path.join(file_dir, f"{name_without_ext}_opt{ext}")
+    
+    # Copy original results to the new file
+    print(f"\nCreating optimization results file: {opt_results_file}")
+    original_df = pd.read_csv(results_file)
+    original_df.to_csv(opt_results_file, index=False)
+    print(f"Copied {len(original_df)} existing results to optimization file")
+    print("-" * 50)
+    
     # Track optimization history
     iteration_history = []
     
@@ -262,10 +276,10 @@ def run_optimization_loop(n_iterations=5, results_file='results.csv'):
             rf1_value, region_name = get_rf1_from_odb(overlap, adhesive_thickness)
             
             if rf1_value is not None and region_name is not None:
-                # 4. Update results.csv with the new point
+                # 4. Update optimization results file with the new point
                 os.chdir(original_dir)  # Return to original directory
-                update_results_csv(overlap, adhesive_thickness, rf1_value, region_name, results_file)
-                print(f"Results updated: RF1 = {rf1_value:.2f}")
+                update_results_csv(overlap, adhesive_thickness, rf1_value, region_name, opt_results_file)
+                print(f"Results updated in {os.path.basename(opt_results_file)}: RF1 = {rf1_value:.2f}")
                 
                 # Store RF1 in iteration data
                 iteration_data['rf1_value'] = rf1_value
@@ -348,6 +362,8 @@ def plot_optimization_history(iteration_history):
     print(f"Final max uncertainty: {df['std_dev'].iloc[-1]:.2f}")
     print(f"Uncertainty reduction: {((df['std_dev'].iloc[0] - df['std_dev'].iloc[-1]) / df['std_dev'].iloc[0] * 100):.1f}%")
     print("=" * 50)
+    
+    return df
 
 if __name__ == '__main__':
     print("Starting Kriging model optimization loop")
@@ -363,10 +379,21 @@ if __name__ == '__main__':
     print(f"Selected results file: {RESULTS_FILE}")
     print("-" * 50)
     
-    # Run optimization
+    # Run optimization (returns iteration_history list)
     history = run_optimization_loop(N_ITERATIONS, RESULTS_FILE)
     
-    # Save results immediately after optimization
+    # Display final optimization results file location
+    file_dir = os.path.dirname(RESULTS_FILE)
+    file_name = os.path.basename(RESULTS_FILE)
+    name_without_ext = os.path.splitext(file_name)[0]
+    ext = os.path.splitext(file_name)[1]
+    opt_results_file = os.path.join(file_dir, f"{name_without_ext}_opt{ext}")
+    
+    print(f"\n{'='*50}")
+    print(f"Optimization results saved to: {opt_results_file}")
+    print(f"{'='*50}")
+    
+    # Save iteration history immediately after optimization
     if history:
         # Create output directory if it doesn't exist
         script_dir = os.path.dirname(os.path.abspath(__file__))

@@ -3,6 +3,10 @@
 # Ignore simulation parameter CSV file
 abaqus-sim/inputs/sim_params.csv
 
+# Ignore simulation results (ODB, CAE files are large)
+abaqus-sim/results/
+!abaqus-sim/results/README.md
+
 # Python cache
 __pycache__/
 *.pyc

@@ -58,6 +58,7 @@ def get_rf1_from_odb(overlap_mm, thickness_mm):
     """Extract RF1 value and region from an ODB file using abaqus python."""
     script_dir = os.path.dirname(os.path.abspath(__file__))
     abaqus_dir = os.path.abspath(os.path.join(script_dir, '..', 'abaqus-sim', 'src'))
+    results_dir = os.path.abspath(os.path.join(script_dir, '..', 'abaqus-sim', 'results'))
     
     # Format the filename components
     overlap_str = format_overlap_for_filename(overlap_mm)
@@ -65,7 +66,7 @@ def get_rf1_from_odb(overlap_mm, thickness_mm):
     
     # Construct the expected ODB filename
     odb_name = f"{JOINT_TYPE}{overlap_str}_{thickness_microns}mu_{ADHESIVE_TYPE}.odb"
-    odb_path = os.path.join(abaqus_dir, odb_name)
+    odb_path = os.path.join(results_dir, odb_name)
     
     if not os.path.exists(odb_path):
         print(f"Error: ODB file not found: {odb_path}")
@@ -246,10 +247,12 @@ def run_optimization_loop(n_iterations=5, results_file='results.csv'):
             # Give a small buffer for file system operations
             time.sleep(2)
             
-            # Check if ODB file exists
+            # Check if ODB file exists in results directory
+            results_dir = os.path.abspath(os.path.join(sim_dir, '..', 'results'))
             odb_name = f"{job_name}.odb"
-            if not os.path.exists(odb_name):
-                print(f"Error: Expected ODB file {odb_name} not found after simulation")
+            odb_path_check = os.path.join(results_dir, odb_name)
+            if not os.path.exists(odb_path_check):
+                print(f"Error: Expected ODB file {odb_name} not found in results directory after simulation")
                 return iteration_history
                 
             print("Simulation completed successfully.")

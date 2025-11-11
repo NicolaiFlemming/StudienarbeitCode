@@ -502,6 +502,17 @@ def SteppedJoint(overlap, adhesive, film_thickness, cores, L=150.0, B=25.0, th=2
         rebar=EXCLUDE)
     
 
+    # Create results directory if it doesn't exist
+    import os
+    results_dir = os.path.join(os.path.dirname(os.getcwd()), 'results')
+    if not os.path.exists(results_dir):
+        os.makedirs(results_dir)
+    
+    # Set directory for job outputs
+    job_dir = os.path.join(results_dir, part_name)
+    if not os.path.exists(job_dir):
+        os.makedirs(job_dir)
+    
     #create job
     mdb.Job(name=part_name, model='Model-1', description='', type=ANALYSIS, 
         atTime=None, waitMinutes=0, waitHours=0, queue=None, memory=90, 
@@ -515,6 +526,15 @@ def SteppedJoint(overlap, adhesive, film_thickness, cores, L=150.0, B=25.0, th=2
     job.submit()
     job.waitForCompletion()
 
-    mdb.saveAs(pathName=f"{part_name}.cae")
+    # Save CAE file in results directory
+    cae_path = os.path.join(results_dir, f"{part_name}.cae")
+    mdb.saveAs(pathName=cae_path)
+    
+    # Move ODB file to results directory
+    import shutil
+    odb_source = f"{part_name}.odb"
+    odb_dest = os.path.join(results_dir, f"{part_name}.odb")
+    if os.path.exists(odb_source):
+        shutil.move(odb_source, odb_dest)
 
 #SteppedJoint(overlap = 30, adhesive=DP490, film_thickness=0.1, cores=12, L=150.0, B=25.0, th=2.0, pl=8, num_steps=4, orientation_values= [-45.0, 0.0, 45.0, 90.0, 90.0, 45.0, 0.0, -45.0])

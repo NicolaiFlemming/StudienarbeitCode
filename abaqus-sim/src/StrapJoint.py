@@ -489,16 +489,14 @@ def StrapJoint(overlap, adhesive, film_thickness, cores, L=150.0, B=25.0, th=2.0
         region=regionDef, filter='MinValue', sectionPoints=DEFAULT, 
         rebar=EXCLUDE)
    
-    # Create results directory if it doesn't exist
+    # Change to results directory before creating job
     import os
     results_dir = os.path.join(os.path.dirname(os.getcwd()), 'results')
     if not os.path.exists(results_dir):
         os.makedirs(results_dir)
     
-    # Set directory for job outputs
-    job_dir = os.path.join(results_dir, part_name)
-    if not os.path.exists(job_dir):
-        os.makedirs(job_dir)
+    original_dir = os.getcwd()
+    os.chdir(results_dir)
     
     #create job
     mdb.Job(name=part_name, model='Model-1', description='', type=ANALYSIS, 
@@ -513,16 +511,11 @@ def StrapJoint(overlap, adhesive, film_thickness, cores, L=150.0, B=25.0, th=2.0
     job.submit()
     job.waitForCompletion()
 
-    # Save CAE file in results directory
-    cae_path = os.path.join(results_dir, f"{part_name}.cae")
-    mdb.saveAs(pathName=cae_path)
+    # Save CAE file (in results directory)
+    mdb.saveAs(pathName=f"{part_name}.cae")
     
-    # Move ODB file to results directory
-    import shutil
-    odb_source = f"{part_name}.odb"
-    odb_dest = os.path.join(results_dir, f"{part_name}.odb")
-    if os.path.exists(odb_source):
-        shutil.move(odb_source, odb_dest)
+    # Return to original directory
+    os.chdir(original_dir)
     
 #    mdb.saveAs(
 #       pathName='C:/Users/nicol/Documents/Abaqus/StrapJointTest/StrapJointTest')

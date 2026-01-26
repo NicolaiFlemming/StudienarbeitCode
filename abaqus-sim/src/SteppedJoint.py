@@ -446,7 +446,7 @@ def SteppedJoint(overlap, adhesive, film_thickness, cores, L=150.0, B=25.0, th=2
         localCsys=None)
     
     mymodel.boundaryConditions['Zug'].setValuesInStep(
-        stepName='Step-1', u1=6.0, amplitude='SmoothStep')
+        stepName='Step-1', u1=10.0, amplitude='SmoothStep')
     
     #mesh
 

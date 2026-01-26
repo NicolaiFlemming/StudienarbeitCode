@@ -431,7 +431,7 @@ def StrapJoint(overlap, adhesive, film_thickness, cores, L=150.0, B=25.0, th=2.0
         localCsys=None)
     
     mymodel.boundaryConditions['Zug'].setValuesInStep(
-        stepName='Step-1', u1=6.0, amplitude='SmoothStep')
+        stepName='Step-1', u1=10.0, amplitude='SmoothStep')
     
     #mesh
     f1 = a.instances['Strap-1'].faces

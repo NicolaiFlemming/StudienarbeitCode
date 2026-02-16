@@ -190,7 +190,7 @@ def run_optimization_loop(n_iterations=5, results_file='results.csv'):
         print(f"\nStarting iteration {iteration + 1}/{n_iterations}")
         
         # 1. Train Kriging model and get point of highest uncertainty
-        result = train_and_predict_kriging(results_file, show_plots=False)
+        result = train_and_predict_kriging(opt_results_file, show_plots=False)
         
         if result is None:
             print("Error in Kriging model training. Stopping optimization loop.")

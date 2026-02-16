@@ -489,9 +489,10 @@ def StrapJoint(overlap, adhesive, film_thickness, cores, L=150.0, B=25.0, th=2.0
         region=regionDef, filter='MinValue', sectionPoints=DEFAULT, 
         rebar=EXCLUDE)
    
-    # Change to results directory before creating job
+    # Change to deterministic results directory before creating job
     import os
-    results_dir = os.path.join(os.path.dirname(os.getcwd()), 'results')
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    results_dir = os.path.abspath(os.path.join(script_dir, '..', 'results'))
     if not os.path.exists(results_dir):
         os.makedirs(results_dir)
     

@@ -46,7 +46,7 @@ def load_and_process_data(file_path=None):
         
         if not file_path:
             print("No file selected. Exiting.")
-            return None, None, None, None, None
+            return None, None, None, None, None, None, None
     
     print(f"Loading data from: {file_path}")
     
@@ -63,11 +63,11 @@ def load_and_process_data(file_path=None):
         X_train_scaled = x_scaler.fit_transform(X_train)
         Y_train_scaled = y_scaler.fit_transform(Y_train)
         
-        return X_train, Y_train, X_train_scaled, Y_train_scaled, x_scaler, y_scaler
+        return X_train, Y_train, X_train_scaled, Y_train_scaled, x_scaler, y_scaler, file_path
         
     except Exception as e:
         print(f"Error loading data: {e}")
-        return None, None, None, None, None, None
+        return None, None, None, None, None, None, None
 
 def create_prediction_grid():
     """Create the prediction grid for the design space."""
@@ -161,7 +161,7 @@ def create_plots(xx1, xx2, X_train, Y_train, Y_pred_mean_grid, Y_pred_std_grid):
 def train_and_predict_kriging(file_path=None, show_plots=False):
     """Train the Kriging model and return the point of highest uncertainty."""
     # Load and process data
-    X_train, Y_train, X_train_scaled, Y_train_scaled, x_scaler, y_scaler = load_and_process_data(file_path)
+    X_train, Y_train, X_train_scaled, Y_train_scaled, x_scaler, y_scaler, training_file_path = load_and_process_data(file_path)
     if X_train is None:
         return None
     
@@ -175,6 +175,7 @@ def train_and_predict_kriging(file_path=None, show_plots=False):
     # Note: kernel structure is now (ConstantKernel * Matern) + WhiteKernel
     # k1 is the sum, k1.k1 is the product, k1.k2 is WhiteKernel
     hyperparameters = {
+        'training_data_file': os.path.basename(training_file_path),
         'constant_value': optimized_kernel.k1.k1.constant_value,
         'length_scale_overlap': optimized_kernel.k1.k2.length_scale[0],
         'length_scale_thickness': optimized_kernel.k1.k2.length_scale[1],
@@ -185,6 +186,7 @@ def train_and_predict_kriging(file_path=None, show_plots=False):
     
     # Display optimized hyperparameters
     print("\nOptimized Hyperparameters:")
+    print(f"  Training data file: {hyperparameters['training_data_file']}")
     print(f"  Constant value: {hyperparameters['constant_value']:.4f}")
     print(f"  Length scale (Overlap): {hyperparameters['length_scale_overlap']:.4f}")
     print(f"  Length scale (Thickness): {hyperparameters['length_scale_thickness']:.4f}")

@@ -19,16 +19,32 @@ def initialize_model():
                         length_scale_bounds=bounds_ls,
                         nu=2.5)
     
-    # Define the noise kernel - let optimizer find the best noise level
-    noise_kernel = WhiteKernel(noise_level=1e-5, noise_level_bounds=(1e-10, 1e1))
+    # Define the noise kernel - let optimizer find the best noise level.
+    # Lower bound reduced slightly to avoid frequent "hits lower bound" warnings.
+    noise_kernel = WhiteKernel(noise_level=1e-5, noise_level_bounds=(1e-12, 1e1))
     
     # Combine signal and noise kernels
     kernel = main_kernel + noise_kernel
     
+    def _lbfgs_optimizer(obj_func, initial_theta, bounds):
+        # Increase max iterations to reduce "lbfgs failed to converge" warnings.
+        from scipy.optimize import minimize
+
+        res = minimize(
+            obj_func,
+            initial_theta,
+            jac=True,
+            bounds=bounds,
+            method="L-BFGS-B",
+            options={"maxiter": 2000},
+        )
+        return res.x, res.fun
+
     return GaussianProcessRegressor(
         kernel=kernel,
         n_restarts_optimizer=100,
-        random_state=42
+        random_state=42,
+        optimizer=_lbfgs_optimizer,
     )
 
 def load_and_process_data(file_path=None):
@@ -168,7 +184,7 @@ def train_and_predict_kriging(file_path=None, show_plots=False):
     # Initialize and train model
     print("\nTraining Kriging Model...")
     gp = initialize_model()
-    gp.fit(X_train_scaled, Y_train_scaled)
+    gp.fit(X_train_scaled, Y_train_scaled.ravel())
     
     # Extract hyperparameters after optimization
     optimized_kernel = gp.kernel_

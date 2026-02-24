@@ -51,6 +51,73 @@ def calculate_mae(actual: list, predicted: list) -> float:
         
     return np.mean(np.abs(actual - predicted))
 
+def plot_kriging_model_with_test_points_3d(
+    gp,
+    x_scaler,
+    y_scaler,
+    train_df: pd.DataFrame,
+    test_df: pd.DataFrame,
+    output_dir: str,
+) -> str:
+    """Create and save a 3D plot of Kriging model surface and test data points."""
+    overlap_all = np.concatenate([
+        train_df['Overlap_mm'].values,
+        test_df['Overlap_mm'].values,
+    ])
+    thickness_all = np.concatenate([
+        train_df['Adhesive_Thickness_mm'].values,
+        test_df['Adhesive_Thickness_mm'].values,
+    ])
+
+    x1_min, x1_max = overlap_all.min(), overlap_all.max()
+    x2_min, x2_max = thickness_all.min(), thickness_all.max()
+
+    x1_margin = max((x1_max - x1_min) * 0.05, 0.5)
+    x2_margin = max((x2_max - x2_min) * 0.05, 0.005)
+
+    grid_x1 = np.linspace(x1_min - x1_margin, x1_max + x1_margin, 80)
+    grid_x2 = np.linspace(x2_min - x2_margin, x2_max + x2_margin, 80)
+    xx1, xx2 = np.meshgrid(grid_x1, grid_x2)
+    X_grid = np.column_stack([xx1.ravel(), xx2.ravel()])
+
+    X_grid_scaled = x_scaler.transform(X_grid)
+    y_grid_scaled = gp.predict(X_grid_scaled)
+    y_grid = y_scaler.inverse_transform(y_grid_scaled.reshape(-1, 1)).ravel()
+    zz = y_grid.reshape(xx1.shape)
+
+    fig = plt.figure(figsize=(12, 9))
+    ax = fig.add_subplot(111, projection='3d')
+
+    surf = ax.plot_surface(xx1, xx2, zz, cmap='viridis', alpha=0.75, linewidth=0)
+    fig.colorbar(surf, ax=ax, shrink=0.6, aspect=16, label='Predicted Max RF1 (N)')
+
+    ax.scatter(
+        test_df['Overlap_mm'].values,
+        test_df['Adhesive_Thickness_mm'].values,
+        test_df['Max_RF1'].values,
+        c='red',
+        marker='s',
+        s=55,
+        edgecolors='black',
+        linewidth=0.6,
+        alpha=0.95,
+        label='Test Data Points',
+    )
+
+    ax.set_xlabel('Overlap_mm ($L_{lap}$)')
+    ax.set_ylabel('Adhesive_Thickness_mm ($t_{adh}$)')
+    ax.set_zlabel('Max RF1 (N)')
+    ax.set_title('Kriging Model Surface with Test Data Points (3D)', fontsize=14, fontweight='bold')
+    ax.legend(loc='upper left')
+
+    plt.tight_layout()
+
+    plot_path = os.path.join(output_dir, 'krg_model_with_test_points_3d.svg')
+    plt.savefig(plot_path, dpi=300, bbox_inches='tight')
+    plt.show()
+
+    return plot_path
+
 def main():
     """Main function to perform Kriging model verification."""
     print("=" * 70)
@@ -90,10 +157,15 @@ def main():
     print(f"\nReading test data from: {os.path.basename(test_file)}")
     test_df = pd.read_csv(test_file)
     print(f"Test set: {len(test_df)} points")
+
+    # Prepare output directory
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    output_dir = os.path.join(script_dir, 'output')
+    os.makedirs(output_dir, exist_ok=True)
     
     # Step 4: Load and process training data using krg_training function
     print("\nProcessing training data...")
-    X_train, Y_train, X_train_scaled, Y_train_scaled, x_scaler, y_scaler = load_and_process_data(training_file)
+    X_train, Y_train, X_train_scaled, Y_train_scaled, x_scaler, y_scaler, _ = load_and_process_data(training_file)
     
     if X_train is None:
         print("Error processing training data. Exiting.")
@@ -136,6 +208,15 @@ def main():
     
     actuals = test_df['Max_RF1'].values
     predictions = Y_pred
+
+    # Step 7: Create 3D model surface plot with test points
+    print("\n" + "=" * 70)
+    print("Generating 3D Plot: Kriging Model + Test Data Points")
+    print("=" * 70)
+    model_3d_plot_path = plot_kriging_model_with_test_points_3d(
+        gp, x_scaler, y_scaler, train_df, test_df, output_dir
+    )
+    print(f"\n3D model plot saved to: {model_3d_plot_path}")
     
     print(f"\n{'Overlap':>10} | {'Thickness':>10} | {'Actual RF1':>12} | {'Predicted RF1':>14} | {'Std Dev':>10} | {'Error':>10} | {'Error %':>10}")
     print("-" * 100)
@@ -152,7 +233,7 @@ def main():
         
         print(f"{overlap:10.2f} | {thickness:10.4f} | {actual_rf1:12.2f} | {predicted_rf1:14.2f} | {std_dev:10.2f} | {error:10.2f} | {error_pct:9.2f}%")
     
-    # Step 7: Calculate error metrics
+    # Step 8: Calculate error metrics
     rmse = calculate_rmse(actuals, predictions)
     mape = calculate_mape(actuals, predictions)
     mae = calculate_mae(actuals, predictions)
@@ -178,7 +259,7 @@ def main():
     print(f"RMSSE (Root Mean Sq. Std. Error): {rmsse:10.4f}  (target: ~1)")
     print("=" * 70)
     
-    # Step 8: Create actual vs predicted scatter plot
+    # Step 9: Create actual vs predicted scatter plot
     print("\n" + "=" * 70)
     print("Generating Actual vs Predicted Scatter Plot...")
     print("=" * 70)
@@ -213,17 +294,13 @@ def main():
     plt.tight_layout()
     
     # Save plot
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    output_dir = os.path.join(script_dir, 'output')
-    os.makedirs(output_dir, exist_ok=True)
-    
     plot_path = os.path.join(output_dir, 'krg_actual_vs_predicted.svg')
     plt.savefig(plot_path, dpi=300, bbox_inches='tight')
     print(f"\nActual vs Predicted plot saved to: {plot_path}")
     
     plt.show()
     
-    # Step 9: Create residual plot
+    # Step 10: Create residual plot
     print("\n" + "=" * 70)
     print("Generating Residual Plot...")
     print("=" * 70)

@@ -21,7 +21,7 @@ def initialize_model():
     
     # Define the noise kernel - let optimizer find the best noise level.
     # Lower bound reduced slightly to avoid frequent "hits lower bound" warnings.
-    noise_kernel = WhiteKernel(noise_level=1e-5, noise_level_bounds=(1e-12, 1e1))
+    noise_kernel = WhiteKernel(noise_level=1e-5, noise_level_bounds=(1e-6, 1e1))
     
     # Combine signal and noise kernels
     kernel = main_kernel + noise_kernel
